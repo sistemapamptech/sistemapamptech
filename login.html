@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pamptech - Login</title>
+  <!-- Link para o arquivo CSS externo -->
+  <link rel="stylesheet" href="login.css">
+  <!-- Fonte do Google (Poppins) para um visual moderno -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Container principal que segura tudo -->
+  <main class="login-container">
+    
+    <!-- O card de login central -->
+    <div class="login-card">
+      
+      <!-- Cabeçalho do Card (Logo e Texto) -->
+      <header class="card-header">
+        <!-- Espaço para o logo. Você pode usar uma imagem real ou texto como aqui -->
+        <div class="logo">
+          <div class="logo-icon"></div> <!-- O ícone geométrico -->
+          <div class="logo-text">
+            <img src="img/pamptech-logo-bglight.png" style="width: 200px;">
+          </div>
+        </div>
+        <!-- Texto de boas-vindas -->
+        <p class="welcome-text">Acesse sua conta e aproveite sua experiência!</p>
+        <hr class="header-divider">
+      </header>
+      
+      <!-- Formulário de Login -->
+      <form id="form-login" class="login-form">
+        <!-- Campo de Usuário -->
+        <div class="input-group">
+          <input type="text" id="usuario" name="username" placeholder="Digite seu usuário" required>
+        </div>
+        
+        <!-- Campo de Senha -->
+        <div class="input-group">
+          <input type="password" id="senha" name="password" placeholder="Digite sua senha" required>
+        </div>
+        
+        <!-- Botão de Entrar -->
+        <button type="submit" class="btn-login">Entrar</button>
+      </form>
+      
+      <!-- O efeito de gradiente azul desfocado (no canto inferior direito) -->
+      <div class="gradient-blob"></div>
+      
+    </div>
+    
+  </main>
+  
+     <script>
+        const API_URL = "/.netlify/functions/sheets";
+
+        document.getElementById("form-login").addEventListener("submit", function (e) {
+            e.preventDefault();
+            
+            const payload = {
+                acao: "login",
+                dados: {
+                    usuario: document.getElementById("usuario").value.trim(),
+                    senha: document.getElementById("senha").value.trim()
+                }
+            };
+
+            fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === "sucesso") {
+                    // Armazena a sessão no navegador
+                    localStorage.setItem("usuarioLogado", JSON.stringify(res.usuario));
+                    window.location.href = "index.html";
+                } else {
+                    alert(res.message);
+                }
+            })
+            .catch(err => alert("Erro ao tentar realizar login."));
+        });
+    </script>
+ 
+
+</body>
+</html>

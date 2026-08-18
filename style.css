@@ -1,0 +1,555 @@
+/* ==========================================
+   1. RESET E ESTILOS GERAIS
+   ========================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+  color: #334155;
+  padding: 20px;
+}
+
+/* ==========================================
+   2. ESTRUTURA DO SIDEBAR (FIXO E FLEXBOX)
+   ========================================== */
+/* ==========================================
+   ESTRUTURA DO SIDEBAR (COM DEGRADÊ INFERIOR)
+   ========================================== */
+.sidebar {
+  width: 260px;
+  height: 90vh;
+  position: fixed; /* Mantém a sidebar fixa na tela */
+  top: 0;
+  left: 0;
+  background-color: #f6f6f6; /* Fundo claro base */
+  border-radius: 10px;
+  padding: 24px;
+  margin: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 100;
+  overflow: hidden; /* Garante que o brilho do degradê não saia das bordas */
+}
+
+/* Pseudo-elemento responsável pelo degradê azul arredondado no canto inferior direito */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+/* Utilização da cor #344dcd com variação de opacidade (HEX com alfa) */
+  background: radial-gradient(
+    circle at center, 
+    #344dcd 0%, 
+    rgba(52, 77, 205, 0.6) 35%, 
+    rgba(52, 77, 205, 0.2) 60%, 
+    rgba(248, 250, 252, 0) 80%
+  );
+  filter: blur(20px); /* Aplica o desfoque para um efeito de iluminação suave */
+  pointer-events: none; /* Garante que o brilho não atrapalhe cliques em links/botões */
+  z-index: 1;
+}
+
+/* Garante que os conteúdos fiquem acima do degradê */
+.sidebar-top,
+.sidebar-footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* Logotipo */
+.logo {
+  margin-bottom: 10px;
+}
+
+.logo img {
+	width: 150px;
+}
+
+/* Menu de links */
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-item {
+  text-decoration: none;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #344dcd;
+  color: #ffffff;
+}
+
+.menu-item.active {
+  background-color: #344dcd;
+  color: #ffffff;
+}
+
+.menu-divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 12px 0;
+}
+
+/* Botão Sair no rodapé do menu */
+.logout-btn {
+  text-decoration: none;
+  color: #334155;
+  margin-left: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================
+   ESTILOS DO MENU DROPDOWN (FLEXBOX)
+   ========================================== */
+
+/* Container do Dropdown */
+.dropdown {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Alinhamento do texto e seta do botão principal */
+.dropdown-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.dropdown-btn .arrow {
+  font-size: 11px;
+  transition: transform 0.3s ease;
+}
+
+/* Submenu oculto por padrão com transição de altura */
+.dropdown-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 20px; /* Recuo para destacar a hierarquia */
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+/* Estilo dos itens internos do Submenu */
+.submenu-item {
+  text-decoration: none;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 12px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.submenu-item:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Exibe o submenu ao passar o mouse no container */
+.dropdown:hover .dropdown-content {
+  max-height: 150px; /* Altura máxima suficiente para os 3 itens */
+  opacity: 1;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Rotaciona a seta quando o menu abre */
+.dropdown:hover .arrow {
+  transform: rotate(180deg);
+}
+
+/* ==========================================
+   3. ESTRUTURA DO CONTEÚDO PRINCIPAL (MAIN)
+   ========================================== */
+.main-content {
+  margin-left: 260px; /* Deslocamento equivalente à largura do sidebar */
+  flex: 1;
+  padding: 24px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ==========================================
+   4. BLOCO DIV-USER
+   ========================================== */
+.div-user {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  background-color: #344dcd;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.greeting {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.username {
+  font-size: 15px;
+  color: #0f172a;
+}
+
+/* ==========================================
+   5. BLOCO DIV-TITLE E BOTÕES DE AÇÃO
+   ========================================== */
+.div-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.div-title h1 {
+  font-size: 28px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn {
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn-green { background-color: #22c55e; }
+.btn-blue  { background-color: #344dcd; }
+.btn-yellow{ background-color: #eab308; }
+.btn-red   { background-color: #ef4444; }
+.btn-gray  { background-color: #6b7280; }
+
+/* ==========================================
+   6. BLOCO DIV-CAD (CARD E FORMULÁRIO FLEXBOX)
+   ========================================== */
+/* ==========================================
+   3. CARDS E FORMULÁRIOS (CLASSES PADRONIZADAS)
+   ========================================== */
+.card-section {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 24px 20px 20px 20px;
+  margin-bottom: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-tag {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 2px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+}
+
+/* GRID FLEXBOX REUTILIZÁVEL */
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.align-end { align-items: flex-end; }
+.align-right { justify-content: flex-end; }
+.mb-16 { margin-bottom: 16px; }
+.w-100 { width: 100%; }
+.w-auto { width: auto; }
+.text-right { text-align: right; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: #ffffff;
+}
+
+.form-group input:disabled {
+  background-color: #ffffff;
+  color: #94a3b8;
+}
+
+/* LARGURAS DAS COLUNAS (COL-X) */
+.col-3  { flex: 1 1 calc(25% - 16px); min-width: 150px; }
+.col-4  { flex: 1 1 calc(33.333% - 16px); min-width: 200px; }
+.col-5  { flex: 1 1 calc(41.666% - 16px); min-width: 220px; }
+.col-6  { flex: 1 1 calc(50% - 16px); min-width: 250px; }
+.col-8  { flex: 2 1 calc(66.666% - 16px); min-width: 280px; }
+.col-12 { flex: 1 1 100%; }
+
+/* ESTRUTURA INLINE PARA FORMAÇÃO DE PREÇOS */
+.form-grid-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-row-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.form-row-inline label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.input-inline-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-inline-group input {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 120px;
+  outline: none;
+}
+
+.input-inline-group span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #334155;
+  margin: 8px 0;
+}
+
+/* ==========================================
+   4. TABELAS (CLASSES PADRONIZADAS DA LISTA)
+   ========================================== */
+.list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 50px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.list-header h2 {
+  font-size: 18px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+}
+
+.search-box input {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 240px;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  font-size: 13px;
+}
+
+.data-table th, 
+.data-table td {
+  border: 1px solid #334155;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: #f6f6f6;
+  font-weight: 700;
+  color: #334155;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+.btn-link {
+  border: none;
+  padding: 5px;
+  border-radius: 6px;
+  background-color: #344dcd;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+/* ==========================================
+   5. RODAPÉ
+   ========================================== */
+.page-footer {
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ==========================================
+   6. RESPONSIVIDADE
+   ========================================== */
+@media (max-width: 768px) {
+  .col-3, .col-4, .col-5, .col-6, .col-8 {
+    flex: 1 1 100%;
+  }
+
+  .form-row-inline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .input-inline-group {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+}
+
+/* ==========================================
+   7. RESPONSIVIDADE (MEDIA QUERIES)
+   ========================================== */
+@media (max-width: 900px) {
+  body {
+    flex-direction: column;
+  }
+
+  /* Ajusta o sidebar para o topo em telas menores */
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .div-title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .col-4, .col-8 {
+    flex: 1 1 100%;
+  }
+}

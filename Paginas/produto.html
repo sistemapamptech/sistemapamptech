@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Cadastro de Produto</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://kit.fontawesome.com/4866ffbdb2.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- BARRA LATERAL (SIDEBAR) -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <!-- Logo Pamptech -->
+      <div class="logo">
+        <img src="../img/pamptech-logo-bglight.png" alt="Logo Pamptech">
+      </div>
+      <!-- Menu de Navegação -->
+      <nav class="sidebar-menu">
+        <a href="../index.html" class="menu-item"><i class="fa-solid fa-house"></i>&emsp;Home</a>
+        <!-- DROPDOWN: CADASTROS -->
+        <div class="dropdown">
+          <a href="#" class="menu-item dropdown-btn">
+            <span>› Cadastros</span>
+            <span class="arrow">▾</span>
+          </a>
+          <div class="dropdown-content">
+            <a href="../Paginas/grupo.html" class="submenu-item"><i class="fa-solid fa-users"></i>&emsp;Grupo</a>
+            <a href="../Paginas/subgrupo.html" class="submenu-item"><i class="fa-solid fa-users-line"></i>&emsp;Subgrupo</a>
+            <a href="../Paginas/categoria.html" class="submenu-item"><i class="fa-regular fa-folder"></i>&emsp;Categoria</a>
+            <a href="../Paginas/subcategoria.html" class="submenu-item"><i class="fa-regular fa-folder-open"></i>&emsp;Subcategoria</a>
+          </div>
+        </div>
+        <a href="../Paginas/parametros.html" class="menu-item">› Parâmetros</a>
+        <a href="../Paginas/fornecedor.html" class="menu-item">› Fornecedor</a>
+        <a href="../Paginas/materiaprima.html" class="menu-item">› Matéria-Prima</a>
+        <a href="../Paginas/produto.html" class="menu-item active">› Produtos</a>
+        <a href="../Paginas/usuario.html" class="menu-item">› Usuários</a>
+        <a href="../Paginas/relatorio.html" class="menu-item">› Relatórios</a>
+      </nav>
+    </div>  
+    <hr class="menu-divider">
+    <!-- Rodapé do Sidebar -->
+    <div class="sidebar-footer">
+      <a href="#" id="btn-logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Sair</a>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO PRINCIPAL (MAIN) -->
+  <main class="main-content">
+    
+    <!-- DIV-USER: Bloco de perfil do usuário no topo -->
+    <header class="div-user">
+      <div class="user-profile">
+        <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-info">
+          <span class="greeting">Bem Vindo!</span>
+          <strong class="username"><span id="nome-usuario" style="font-weight: bold; margin-right: 15px;"></span></strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- DIV-TITLE: Título da página e botões de ação -->
+    <section class="div-title">
+      <h1>Cadastro de Produto</h1>
+      
+      <div class="action-buttons">
+        <button id="btn-incluir" class="btn btn-green">Incluir</button>
+        <button id="btn-salvar" class="btn btn-blue">Salvar</button>
+        <button id="btn-editar" class="btn btn-yellow">Editar</button>
+        <button id="btn-deletar" class="btn btn-red">Deletar</button>
+        <button id="btn-duplicar" class="btn btn-gray">Duplicar</button>
+      </div>
+    </section>
+
+    <!-- FORMULÁRIO DE CADASTRO -->
+    <form id="form-produto">
+      <!-- DIV-CAD: Formulário de cadastro de produtos -->
+      <section class="div-cad">
+        
+        <!-- SEÇÃO 1: DADOS GERAIS -->
+        <section class="card-section">
+          <span class="card-tag">Dados Gerais</span>
+          <div class="form-grid">
+            <div class="form-group col-4">
+              <label for="codigo">Código:</label>
+              <input type="text" id="codigo" name="codigo" readonly placeholder="Gerado automaticamente" disabled>
+            </div>
+            <div class="form-group col-8">
+              <label for="descricao">Descrição:</label>
+              <input type="text" id="descricao" name="descricao" required disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="ncm">NCM:</label>
+              <input type="text" id="ncm" name="ncm" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="grupo">Grupo:</label>
+              <select id="grupo" name="grupo" disabled><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group col-4">
+              <label for="subgrupo">Subgrupo:</label>
+              <select id="subgrupo" name="subgrupo" disabled><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group col-4">
+              <label for="unidade">Unidade:</label>
+              <select id="unidade" name="unidade" disabled>
+                <option value="">Selecione...</option>
+                <option value="UN">Unidade (UN)</option>
+                <option value="KG">Quilograma (KG)</option>
+                <option value="CX">Caixa (CX)</option>
+                <option value="M">Metro (M)</option>
+              </select>
+            </div>
+            <div class="form-group col-4">
+              <label for="categoria">Categoria:</label>
+              <select id="categoria" name="categoria" disabled><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group col-4">
+              <label for="subcategoria">Subcategoria:</label>
+              <select id="subcategoria" name="subcategoria" disabled><option value="">Selecione...</option></select>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 2: COMPOSIÇÃO / FICHA TÉCNICA -->
+        <section class="card-section">
+          <span class="card-tag">Composição / Ficha Técnica</span>
+          <div class="form-grid align-end mb-16">
+            <div class="form-group col-5">
+              <label for="input-materia-prima">Matéria-Prima:</label>
+              <input type="text" id="input-materia-prima" list="lista-materias-primas" placeholder="Digite para buscar..." disabled>
+              <datalist id="lista-materias-primas"></datalist>
+            </div>
+            <div class="form-group col-3">
+              <label for="quantidade-mp">Quantidade:</label>
+              <input type="number" id="quantidade-mp" step="0.0001" min="0" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="btn-inserir-componente">Ação:</label>
+              <button type="button" id="btn-inserir-componente" disabled class="btn btn-blue">Inserir Matéria-Prima</button>
+            </div>
+          </div>
+
+          <!-- TABELA INTERNA DE COMPOSIÇÃO -->
+          <div class="table-responsive">
+            <table id="tabela-ficha-tecnica" class="data-table">
+              <thead>
+                <tr>
+                  <th>Matéria-Prima</th>
+                  <th>Quantidade</th>
+                  <th>Custo Unit. (R$)</th>
+                  <th>Subtotal (R$)</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Registros inseridos dinamicamente entram aqui -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 3: FORMAÇÃO DE PREÇOS (MARKUP DIVISOR) -->
+        <section class="card-section">
+          <span class="card-tag">Formação de Preços (Markup Divisor)</span>
+          
+          <div class="form-grid mb-16">
+            <div class="form-group col-12 align-right">
+              <label for="parametro-geral">Parâmetro Geral:</label>
+              <select id="parametro-geral" name="parametro_geral" disabled class="w-auto">
+                <option value="">Selecione o Parâmetro...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-flex">
+            <div class="form-row-inline">
+              <label for="custo-mp">Custo Matéria-Prima (R$):</label>
+              <div class="input-inline-group">
+                <input type="text" class="text-right" id="custo-mp" name="custo_mp" readonly value="0,00">
+              </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label for="despesas-fixas-pct">Despesas Fixas (%):</label>
+              <div class="input-inline-group">
+                <input type="number" id="despesas-fixas-pct" name="despesas_fixas_pct" readonly step="0.01" class="text-right" value="0.00">
+                <span>/ R$:</span>
+                <input type="number" id="despesas-fixas-val" readonly value="0.00" step="0.01" class="text-right">
+              </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label for="tributos-pct">Tributos (%):</label>
+              <div class="input-inline-group">
+                <input type="number" id="tributos-pct" name="tributos_pct" readonly value="0.00" step="0.01" class="text-right">
+                <span>/ R$:</span>
+                <input type="number" id="tributos-val" readonly value="0.00" step="0.01" class="text-right">
+              </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label for="margem-lucro-pct">Margem de Lucro Desejada (%):</label>
+              <div class="input-inline-group">
+                <input type="number" id="margem-lucro-pct" name="margem_lucro_pct" readonly value="0.00" step="0.01" class="text-right">
+                <span>/ R$:</span>
+                <input type="number" id="margem-lucro-val" readonly value="0.00" step="0.01" class="text-right">
+              </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <div class="form-row-inline">
+              <label for="markup-divisor">Markup Divisor:</label>
+              <div class="input-inline-group">
+                <input type="number" id="markup-divisor" name="markup_divisor" readonly value="0.0000" step="0.0001" class="text-right">
+              </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label for="custo-final-total">Custo Final Total (R$):</label>
+              <div class="input-inline-group">
+                <input type="number" id="custo-final-total" name="custo_final_total" readonly value="0.00" step="0.01" class="text-right">
+              </div>
+            </div>
+
+            <div class="form-row-inline">
+              <label for="preco-venda">Preço de Venda (R$):</label>
+              <div class="input-inline-group">
+                <input type="number" id="preco-venda" name="preco_venda" readonly value="0.00" step="0.01" class="text-right">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 4: CONTROLE DO SISTEMA -->
+        <section class="card-section">
+          <span class="card-tag">Controle do Sistema</span>
+          <div class="form-grid">
+            <div class="form-group col-6">
+              <label for="dataCadastro">Data de Cadastro:</label>
+              <input type="text" id="dataCadastro" name="dataCadastro" readonly placeholder="Preenchimento automático" disabled>
+            </div>
+            <div class="form-group col-6">
+              <label for="dataAlteracao">Data de Alteração:</label>
+              <input type="text" id="dataAlteracao" name="dataAlteracao" readonly placeholder="Preenchimento automático" disabled>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </form>
+
+    <!-- SEÇÃO 5: PRODUTOS CADASTRADOS -->
+    <section class="list-section">
+      <div class="list-header">
+        <h2>Produtos Cadastrados</h2>
+        <div class="search-box">
+          <input type="text" id="busca" placeholder="Buscar por código ou descrição...">
+          <button id="btn-buscar" class="btn btn-blue">Buscar</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="tabela-produtos" class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Grupo</th>
+              <th>Categoria</th>
+              <th>Unidade</th>
+              <th>Preço de Venda</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Preenchido via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RODAPÉ DA PÁGINA -->
+    <footer class="page-footer">
+      <p>Pamptech - Soluções e Desenvolvimento. Todos os direitos reservados.</p>
+    </footer>
+
+  </main>
+
+<script>
+const API_URL = "/.netlify/functions/sheets";
+
+let listaProdutos = [];
+let listaMateriasPrimas = [];
+let listaParametros = [];
+let composicaoFichaTecnica = [];
+let modoAcao = "";
+
+const camposForm = [
+    "descricao", "ncm", "grupo", "subgrupo", "categoria", "subcategoria",
+    "unidade", "dataCadastro", "dataAlteracao", "parametro-geral"
+];
+
+document.addEventListener("DOMContentLoaded", function () {
+    const usuarioLogado = localStorage.getItem("usuarioLogado");
+    if (!usuarioLogado) {
+        window.location.href = "../login.html";
+        return;
+    }
+
+    const userObj = JSON.parse(usuarioLogado);
+    const elemNomeUsuario = document.getElementById("nome-usuario");
+    if (elemNomeUsuario) {
+        elemNomeUsuario.textContent = userObj.nome || "Usuário";
+    }
+
+    const btnLogout = document.getElementById("btn-logout");
+    if (btnLogout) {
+        btnLogout.addEventListener("click", function (e) {
+            e.preventDefault();
+            localStorage.removeItem("usuarioLogado");
+            window.location.href = "../login.html";
+        });
+    }
+
+    bloquearFormulario();
+    carregarCombos();
+    carregarProdutos();
+
+    document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
+    document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
+    document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
+    
+    const btnDuplicar = document.getElementById("btn-duplicar");
+    if (btnDuplicar) {
+        btnDuplicar.addEventListener("click", duplicarProduto);
+    }
+
+    document.getElementById("btn-deletar").addEventListener("click", deletarProduto);
+    
+    document.getElementById("busca").addEventListener("input", filtrarProdutos);
+    document.getElementById("btn-buscar").addEventListener("click", filtrarProdutos);
+
+    document.getElementById("btn-inserir-componente").addEventListener("click", adicionarItemFicha);
+    document.getElementById("parametro-geral").addEventListener("change", aplicarParametrosGerais);
+});
+
+function obterNomeUsuarioAtivo() {
+    const usuarioLogado = localStorage.getItem("usuarioLogado");
+    if (usuarioLogado) {
+        try {
+            const userObj = JSON.parse(usuarioLogado);
+            return userObj.nome || "Usuário";
+        } catch (e) {
+            return "Usuário";
+        }
+    }
+    return "Usuário";
+}
+
+function obterDataComUsuario() {
+    const hoje = new Date();
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    const dataFormatada = `${dia}/${mes}/${ano}`;
+    const usuario = obterNomeUsuarioAtivo();
+
+    return `${dataFormatada} por ${usuario}`;
+}
+
+function bloquearFormulario() {
+    camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+    });
+    document.getElementById("input-materia-prima").disabled = true;
+    document.getElementById("quantidade-mp").disabled = true;
+    document.getElementById("btn-inserir-componente").disabled = true;
+    modoAcao = "";
+}
+
+function desbloquearFormulario() {
+    camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && id !== "dataCadastro" && id !== "dataAlteracao") {
+            el.disabled = false;
+        }
+    });
+    document.getElementById("input-materia-prima").disabled = false;
+    document.getElementById("quantidade-mp").disabled = false;
+    document.getElementById("btn-inserir-componente").disabled = false;
+    document.getElementById("descricao").focus();
+}
+
+function carregarCombos() {
+    const tabelas = [
+        { id: "grupo", aba: "Grupos" },
+        { id: "subgrupo", aba: "Subgrupos" },
+        { id: "categoria", aba: "Categorias" },
+        { id: "subcategoria", aba: "Subcategorias" }
+    ];
+
+    tabelas.forEach(item => {
+        fetch(`${API_URL}?aba=${item.aba}`)
+            .then(r => r.json())
+            .then(dados => {
+                const select = document.getElementById(item.id);
+                if (select) {
+                    select.innerHTML = '<option value="">Selecione...</option>';
+                    dados.forEach(d => {
+                        select.innerHTML += `<option value="${d.descricao}">${d.descricao}</option>`;
+                    });
+                }
+            })
+            .catch(err => console.error(`Erro ao carregar combo ${item.aba}:`, err));
+    });
+
+    fetch(`${API_URL}?aba=MateriasPrimas`)
+        .then(r => r.json())
+        .then(dados => {
+            listaMateriasPrimas = dados;
+            const datalist = document.getElementById("lista-materias-primas");
+            if (datalist) {
+                datalist.innerHTML = "";
+                dados.forEach(mp => {
+                    datalist.innerHTML += `<option value="[${mp.codigo}] ${mp.descricao}">`;
+                });
+            }
+        })
+        .catch(err => console.error("Erro ao carregar matérias-primas:", err));
+
+    fetch(`${API_URL}?aba=ParametrosGerais`)
+        .then(r => r.json())
+        .then(dados => {
+            listaParametros = dados;
+            const select = document.getElementById("parametro-geral");
+            if (select) {
+                select.innerHTML = '<option value="">Selecione o Parâmetro...</option>';
+                dados.forEach(p => {
+                    select.innerHTML += `<option value="${p.codigo}">${p.descricao || 'Parâmetro ' + p.codigo}</option>`;
+                });
+            }
+        })
+        .catch(err => console.error("Erro ao carregar parâmetros:", err));
+}
+
+function adicionarItemFicha() {
+    const valorInput = document.getElementById("input-materia-prima").value.trim();
+    const qtd = parseFloat(document.getElementById("quantidade-mp").value);
+
+    if (!valorInput || isNaN(qtd) || qtd <= 0) {
+        alert("Selecione uma matéria-prima válida e informe a quantidade.");
+        return;
+    }
+
+    const mp = listaMateriasPrimas.find(m => 
+        `[${m.codigo}] ${m.descricao}` === valorInput || 
+        String(m.codigo) === valorInput || 
+        m.descricao.toLowerCase() === valorInput.toLowerCase()
+    );
+
+    if (!mp) {
+        alert("Matéria-prima não encontrada. Selecione uma opção válida da lista.");
+        return;
+    }
+
+    const valorUnit = parseFloat(mp.valorUnitario) || 0;
+    const subtotal = valorUnit * qtd;
+
+    composicaoFichaTecnica.push({
+        codigoMp: mp.codigo,
+        descricaoMp: mp.descricao,
+        quantidade: qtd,
+        custoUnitario: valorUnit,
+        subtotal: subtotal
+    });
+
+    renderizarTabelaFicha();
+    calcularFormacaoPrecos();
+
+    document.getElementById("input-materia-prima").value = "";
+    document.getElementById("quantidade-mp").value = "";
+    document.getElementById("input-materia-prima").focus();
+}
+
+function removerItemFicha(index) {
+    composicaoFichaTecnica.splice(index, 1);
+    renderizarTabelaFicha();
+    calcularFormacaoPrecos();
+}
+
+function renderizarTabelaFicha() {
+    const tbody = document.querySelector("#tabela-ficha-tecnica tbody");
+    tbody.innerHTML = "";
+
+    composicaoFichaTecnica.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${item.descricaoMp}</td>
+            <td>${item.quantidade}</td>
+            <td>R$ ${item.custoUnitario.toFixed(2)}</td>
+            <td>R$ ${item.subtotal.toFixed(2)}</td>
+            <td><button type="button" class="btn btn-red" onclick="removerItemFicha(${index})">Remover</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function aplicarParametrosGerais() {
+    const codParam = document.getElementById("parametro-geral").value;
+    const param = listaParametros.find(p => String(p.codigo) === String(codParam));
+
+    if (param) {
+        document.getElementById("despesas-fixas-pct").value = parseFloat(param.despesasFixasPct || 0).toFixed(2);
+        document.getElementById("tributos-pct").value = parseFloat(param.tributosPct || 0).toFixed(2);
+        document.getElementById("margem-lucro-pct").value = parseFloat(param.margemLucroPct || 0).toFixed(2);
+    } else {
+        document.getElementById("despesas-fixas-pct").value = "0.00";
+        document.getElementById("tributos-pct").value = "0.00";
+        document.getElementById("margem-lucro-pct").value = "0.00";
+    }
+
+    calcularFormacaoPrecos();
+}
+
+function calcularFormacaoPrecos() {
+    const custoMpTotal = composicaoFichaTecnica.reduce((acc, item) => acc + item.subtotal, 0);
+    document.getElementById("custo-mp").value = custoMpTotal.toFixed(2);
+
+    const despesasPct = parseFloat(document.getElementById("despesas-fixas-pct").value) || 0;
+    const tributosPct = parseFloat(document.getElementById("tributos-pct").value) || 0;
+    const margemPct = parseFloat(document.getElementById("margem-lucro-pct").value) || 0;
+
+    const somaPorcentagens = despesasPct + tributosPct + margemPct;
+    const markupDivisor = (100 - somaPorcentagens) / 100;
+    document.getElementById("markup-divisor").value = markupDivisor.toFixed(4);
+
+    let precoVenda = 0;
+    if (markupDivisor > 0 && custoMpTotal > 0) {
+        precoVenda = custoMpTotal / markupDivisor;
+    }
+    document.getElementById("preco-venda").value = precoVenda.toFixed(2);
+
+    const despesasVal = precoVenda * (despesasPct / 100);
+    const tributosVal = precoVenda * (tributosPct / 100);
+    const margemVal = precoVenda * (margemPct / 100);
+
+    document.getElementById("despesas-fixas-val").value = despesasVal.toFixed(2);
+    document.getElementById("tributos-val").value = tributosVal.toFixed(2);
+    document.getElementById("margem-lucro-val").value = margemVal.toFixed(2);
+
+    const custoFinalTotal = custoMpTotal + despesasVal + tributosVal;
+    document.getElementById("custo-final-total").value = custoFinalTotal.toFixed(2);
+}
+
+function iniciarInclusao() {
+    modoAcao = "incluir";
+    document.getElementById("form-produto").reset();
+    composicaoFichaTecnica = [];
+    renderizarTabelaFicha();
+    desbloquearFormulario();
+
+    document.getElementById("dataCadastro").value = obterDataComUsuario();
+    document.getElementById("dataAlteracao").value = "";
+    gerarProximoCodigoSequencial();
+}
+
+function iniciarEdicao() {
+    const codigo = document.getElementById("codigo").value;
+    if (!codigo) {
+        alert("Selecione um produto da lista para editar.");
+        return;
+    }
+    modoAcao = "editar";
+    desbloquearFormulario();
+    document.getElementById("dataAlteracao").value = obterDataComUsuario();
+}
+
+function duplicarProduto() {
+    const codigoAtual = document.getElementById("codigo").value;
+    if (!codigoAtual) {
+        alert("Selecione um produto da lista para duplicar.");
+        return;
+    }
+
+    modoAcao = "incluir";
+    desbloquearFormulario();
+
+    gerarProximoCodigoSequencial();
+
+    document.getElementById("dataCadastro").value = obterDataComUsuario();
+    document.getElementById("dataAlteracao").value = "";
+}
+
+function salvarOuAlterar() {
+    if (!modoAcao) {
+        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
+        return;
+    }
+
+    const descricao = document.getElementById("descricao").value.trim();
+    if (!descricao) {
+        alert("Preencha a Descrição do produto.");
+        return;
+    }
+
+    const payloadDados = {
+        codigo: document.getElementById("codigo").value,
+        descricao: descricao,
+        ncm: document.getElementById("ncm").value,
+        grupo: document.getElementById("grupo").value,
+        subgrupo: document.getElementById("subgrupo").value,
+        categoria: document.getElementById("categoria").value,
+        subcategoria: document.getElementById("subcategoria").value,
+        unidade: document.getElementById("unidade").value,
+        dataCadastro: document.getElementById("dataCadastro").value,
+        usuario: obterNomeUsuarioAtivo(),
+        dataAlteracao: document.getElementById("dataAlteracao").value,
+        parametroGeral: document.getElementById("parametro-geral").value,
+        custoMp: document.getElementById("custo-mp").value,
+        despesasFixasPct: document.getElementById("despesas-fixas-pct").value,
+        tributosPct: document.getElementById("tributos-pct").value,
+        margemLucroPct: document.getElementById("margem-lucro-pct").value,
+        markupDivisor: document.getElementById("markup-divisor").value,
+        precoVenda: document.getElementById("preco-venda").value,
+        custoFinalTotal: document.getElementById("custo-final-total").value,
+        fichaTecnicaJSON: JSON.stringify(composicaoFichaTecnica)
+    };
+
+    const payload = {
+        aba: "Produtos",
+        acao: "salvar",
+        dados: payloadDados
+    };
+
+    fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === "sucesso") {
+            alert(modoAcao === "incluir" ? "Produto cadastrado com sucesso!" : "Produto alterado com sucesso!");
+            limparTela();
+            carregarProdutos();
+        } else {
+            alert("Erro: " + res.message);
+        }
+    })
+    .catch(error => {
+        console.error("Erro ao salvar produto:", error);
+        alert("Erro ao processar a solicitação.");
+    });
+}
+
+function deletarProduto() {
+    const codigo = document.getElementById("codigo").value;
+    if (!codigo) {
+        alert("Selecione um produto da lista para deletar.");
+        return;
+    }
+
+    if (!confirm(`Deseja realmente excluir o produto código ${codigo}?`)) {
+        return;
+    }
+
+    const payload = {
+        aba: "Produtos",
+        acao: "deletar",
+        dados: { codigo: codigo }
+    };
+
+    fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === "sucesso") {
+            alert("Produto deletado com sucesso!");
+            limparTela();
+            carregarProdutos();
+        } else {
+            alert("Erro ao deletar: " + (res.mensagem || res.message));
+        }
+    })
+    .catch(error => {
+        console.error("Erro ao deletar produto:", error);
+        alert("Erro ao excluir o produto.");
+    });
+}
+
+function carregarProdutos() {
+    fetch(`${API_URL}?aba=Produtos`)
+        .then(r => r.json())
+        .then(dados => {
+            listaProdutos = dados;
+            renderizarTabelaProdutos(listaProdutos);
+        })
+        .catch(err => console.error("Erro ao carregar produtos:", err));
+}
+
+function renderizarTabelaProdutos(dados) {
+    const tbody = document.querySelector("#tabela-produtos tbody");
+    tbody.innerHTML = "";
+
+    if (!dados || dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7">Nenhum produto cadastrado.</td></tr>';
+        return;
+    }
+
+    dados.forEach(prod => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${prod.codigo || ''}</td>
+            <td>${prod.descricao || ''}</td>
+            <td>${prod.grupo || ''}</td>
+            <td>${prod.categoria || ''}</td>
+            <td>${prod.unidade || ''}</td>
+            <td>R$ ${parseFloat(prod.precoVenda || 0).toFixed(2)}</td>
+            <td>
+                <button type="button" class="btn-link" onclick="selecionarProduto('${prod.codigo}')">Selecionar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function selecionarProduto(codigo) {
+    const prod = listaProdutos.find(p => String(p.codigo) === String(codigo));
+    if (!prod) return;
+
+    document.getElementById("codigo").value = prod.codigo || '';
+    document.getElementById("descricao").value = prod.descricao || '';
+    document.getElementById("ncm").value = prod.ncm || '';
+    document.getElementById("grupo").value = prod.grupo || '';
+    document.getElementById("subgrupo").value = prod.subgrupo || '';
+    document.getElementById("categoria").value = prod.categoria || '';
+    document.getElementById("subcategoria").value = prod.subcategoria || '';
+    document.getElementById("unidade").value = prod.unidade || '';
+    document.getElementById("dataCadastro").value = prod.dataCadastro || '';
+    document.getElementById("dataAlteracao").value = prod.dataAlteracao || '';
+    document.getElementById("parametro-geral").value = prod.parametroGeral || '';
+
+    try {
+        composicaoFichaTecnica = JSON.parse(prod.fichaTecnicaJSON || '[]');
+    } catch (e) {
+        composicaoFichaTecnica = [];
+    }
+
+    renderizarTabelaFicha();
+    aplicarParametrosGerais();
+    bloquearFormulario();
+}
+
+function gerarProximoCodigoSequencial() {
+    if (!listaProdutos || listaProdutos.length === 0) {
+        document.getElementById("codigo").value = 1;
+        return;
+    }
+    const codigosNumericos = listaProdutos.map(p => Number(p.codigo)).filter(n => !isNaN(n));
+    const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
+    document.getElementById("codigo").value = maiorCodigo + 1;
+}
+
+function filtrarProdutos() {
+    const termo = document.getElementById("busca").value.toLowerCase();
+    const filtrados = listaProdutos.filter(p => 
+        String(p.codigo || '').toLowerCase().includes(termo) || 
+        String(p.descricao || '').toLowerCase().includes(termo)
+    );
+    renderizarTabelaProdutos(filtrados);
+}
+
+function limparTela() {
+    document.getElementById("form-produto").reset();
+    document.getElementById("codigo").value = "";
+    document.getElementById("input-materia-prima").value = "";
+    composicaoFichaTecnica = [];
+    renderizarTabelaFicha();
+    bloquearFormulario();
+}
+</script>
+
+</body>
+</html>

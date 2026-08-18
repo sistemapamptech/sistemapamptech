@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Cadastro de Subgrupo</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://kit.fontawesome.com/4866ffbdb2.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- BARRA LATERAL (SIDEBAR) -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <!-- Logo Pamptech -->
+      <div class="logo">
+        <img src="../img/pamptech-logo-bglight.png">
+      </div>
+      <!-- Menu de Navegação -->
+      <nav class="sidebar-menu">
+        <a href="../index.html" class="menu-item active"><i class="fa-solid fa-house"></i>&emsp;Home</a>
+        <!-- DROPDOWN: CADASTROS -->
+        <div class="dropdown">
+          <a href="#" class="menu-item dropdown-btn">
+            <span>› Cadastros</span>
+            <span class="arrow">▾</span>
+          </a>
+          <div class="dropdown-content">
+            <a href="../Paginas/grupo.html" class="submenu-item"><i class="fa-solid fa-users"></i>&emsp;Grupo</a>
+            <a href="../Paginas/subgrupo.html" class="submenu-item"><i class="fa-solid fa-users-line"></i>&emsp;Subgrupo</a>
+            <a href="../Paginas/categoria.html" class="submenu-item"><i class="fa-regular fa-folder"></i>&emsp;Categoria</a>
+            <a href="../Paginas/subcategoria.html" class="submenu-item"><i class="fa-regular fa-folder-open"></i>&emsp;Subcategoria</a>
+          </div>
+        </div>
+        <a href="../Paginas/parametros.html" class="menu-item">› Parâmetros</a>
+        <a href="../Paginas/fornecedor.html" class="menu-item">› Fornecedor</a>
+        <a href="../Paginas/materiaprima.html" class="menu-item">› Grupo</a>
+        <a href="../Paginas/produto.html" class="menu-item">› Produtos</a>
+        <a href="../Paginas/usuario.html" class="menu-item">› Usuários</a>
+        <a href="../Paginas/relatorio.html" class="menu-item">› Relatórios</a>
+      </nav>
+    </div>  
+    <hr class="menu-divider">
+    <!-- Rodapé do Sidebar -->
+    <div class="sidebar-footer">
+      <a href="#" id="btn-logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Sair</a>
+    </div>
+  </aside>
+  
+  <!-- CONTEÚDO PRINCIPAL (MAIN) -->
+  <main class="main-content">
+    
+    <!-- DIV-USER: Bloco de perfil do usuário no topo -->
+    <header class="div-user">
+      <div class="user-profile">
+        <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-info">
+          <span class="greeting">Bem Vindo!</span>
+          <strong class="username"><span id="nome-usuario" style="font-weight: bold; margin-right: 15px;"></span></strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- DIV-TITLE: Título da página e botões de ação -->
+    <section class="div-title">
+      <h1>Cadastro de Subgrupo</h1>
+      
+      <div class="action-buttons">
+        <button id="btn-incluir" class="btn btn-green">Incluir</button>
+        <button id="btn-salvar" class="btn btn-blue">Salvar</button>
+        <button id="btn-editar" class="btn btn-yellow">Editar</button>
+        <button id="btn-deletar" class="btn btn-red">Deletar</button>
+        <button id="btn-duplicar" class="btn btn-gray">Duplicar</button>
+      </div>
+    </section>
+
+    <!-- DIV-CAD: Formulário de cadastro de subgrupo -->
+    <section class="div-cad">
+      <!-- SEÇÃO 1: DADOS PRINCIPAIS -->
+      <section class="card-section">
+        <span class="card-tag">Dados Principais</span>
+        <!-- Adicionado id="form-subgrupo" aqui -->
+        <form id="form-subgrupo" class="form-grid">
+          <div class="form-group col-4">
+            <label for="codigo">Código:</label>
+            <input type="text" id="codigo" name="codigo" readonly placeholder="Gerado automaticamente" disabled>
+          </div>
+          <div class="form-group col-8">
+            <label for="descricao">Descrição:</label>
+            <input type="text" id="descricao" name="descricao" disabled required>
+          </div>
+        </form>
+      </section>
+
+      <!-- SEÇÃO 2: SUBGRUPOS CADASTRADOS -->
+      <section class="list-section">
+        <div class="list-header">
+          <h2>Subgrupos Cadastrados</h2>
+          <div class="search-box">
+            <input type="text" id="busca" placeholder="Buscar por código ou descr...">
+            <button id="btn-buscar" class="btn btn-blue">Buscar</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table id="tabela-subgrupos" class="data-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td></td>
+                <td></td>
+                <td><button class="btn-link">Selecionar</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RODAPÉ DA PÁGINA -->
+      <footer class="page-footer">
+        <p>Pamptech - Soluções e Desenvolvimento. Todos os direitos reservados.</p>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "/.netlify/functions/sheets";
+    let listaSubgrupos = [];
+    let modoAcao = "";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Validação de Sessão
+        const usuarioLogado = localStorage.getItem("usuarioLogado");
+        if (!usuarioLogado) {
+            window.location.href = "../login.html";
+            return;
+        }
+
+        const userObj = JSON.parse(usuarioLogado);
+        const campoUsuario = document.getElementById("nome-usuario");
+        if (campoUsuario && userObj.nome) {
+            campoUsuario.textContent = userObj.nome;
+        }
+
+        // Evento Logout
+        const btnLogout = document.getElementById("btn-logout");
+        if (btnLogout) {
+            btnLogout.addEventListener("click", function (e) {
+                e.preventDefault();
+                localStorage.removeItem("usuarioLogado");
+                window.location.href = "../login.html";
+            });
+        }
+
+        // Inicialização da Tela
+        bloquearFormulario();
+        carregarSubgrupos();
+
+        // Associação dos Botões de Ação
+        document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
+        document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
+        document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
+        document.getElementById("btn-deletar").addEventListener("click", deletarSubgrupo);
+        
+        document.getElementById("busca").addEventListener("input", filtrarSubgrupos);
+        document.getElementById("btn-buscar").addEventListener("click", filtrarSubgrupos);
+    });
+
+    function bloquearFormulario() {
+        document.getElementById("descricao").disabled = true;
+        modoAcao = "";
+    }
+
+    function desbloquearFormulario() {
+        document.getElementById("descricao").disabled = false;
+        document.getElementById("descricao").focus();
+    }
+
+    function iniciarInclusao() {
+        modoAcao = "incluir";
+        const form = document.getElementById("form-subgrupo");
+        if (form) form.reset();
+        desbloquearFormulario();
+        gerarProximoCodigoSequencial();
+    }
+
+    function iniciarEdicao() {
+        const codigo = document.getElementById("codigo").value;
+        if (!codigo) {
+            alert("Selecione um subgrupo da lista abaixo para editar.");
+            return;
+        }
+        modoAcao = "editar";
+        desbloquearFormulario();
+    }
+
+    function salvarOuAlterar() {
+        if (!modoAcao) {
+            alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
+            return;
+        }
+
+        const descricaoInput = document.getElementById("descricao");
+        if (!descricaoInput.value.trim()) {
+            alert("Preencha a descrição antes de salvar.");
+            descricaoInput.focus();
+            return;
+        }
+
+        const codigoVal = document.getElementById("codigo").value;
+        const descricaoVal = descricaoInput.value.trim();
+
+        const payload = {
+            aba: "Subgrupos",
+            acao: "salvar",
+            dados: {
+                codigo: codigoVal,
+                descricao: descricaoVal
+            }
+        };
+
+        fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === "sucesso") {
+                alert(modoAcao === "incluir" ? "Subgrupo cadastrado com sucesso!" : "Subgrupo alterado com sucesso!");
+                limparTela();
+                carregarSubgrupos();
+            } else {
+                alert("Erro: " + res.message);
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao salvar subgrupo:", error);
+            alert("Erro ao processar a solicitação.");
+        });
+    }
+
+    function deletarSubgrupo() {
+        const codigo = document.getElementById("codigo").value;
+        if (!codigo) {
+            alert("Selecione um subgrupo da lista para deletar.");
+            return;
+        }
+
+        if (!confirm(`Deseja realmente excluir o subgrupo código ${codigo}?`)) {
+            return;
+        }
+
+        const payload = {
+            aba: "Subgrupos",
+            acao: "deletar",
+            dados: { 
+                codigo: codigo 
+            }
+        };
+
+        fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === "sucesso") {
+                alert("Subgrupo deletado com sucesso!");
+                limparTela();
+                carregarSubgrupos();
+            } else {
+                alert("Erro ao deletar: " + (res.mensagem || res.message));
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao deletar subgrupo:", error);
+            alert("Erro ao excluir o subgrupo.");
+        });
+    }
+
+    function carregarSubgrupos() {
+        fetch(`${API_URL}?aba=Subgrupos`)
+            .then(response => response.json())
+            .then(dados => {
+                listaSubgrupos = dados;
+                renderizarTabela(listaSubgrupos);
+            })
+            .catch(error => {
+                console.error("Erro ao carregar subgrupos:", error);
+            });
+    }
+
+    function renderizarTabela(dados) {
+        const tbody = document.querySelector("#tabela-subgrupos tbody");
+        tbody.innerHTML = "";
+
+        if (!Array.isArray(dados) || dados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3">Nenhum subgrupo cadastrado.</td></tr>';
+            return;
+        }
+
+        dados.forEach(subgrupo => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${subgrupo.codigo || ''}</td>
+                <td>${subgrupo.descricao || ''}</td>
+                <td>
+                    <button type="button" class="btn-link" onclick="selecionarSubgrupo('${subgrupo.codigo}', '${subgrupo.descricao}')">Selecionar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function selecionarSubgrupo(codigo, descricao) {
+        document.getElementById("codigo").value = codigo;
+        document.getElementById("descricao").value = descricao;
+        bloquearFormulario();
+    }
+
+    function gerarProximoCodigoSequencial() {
+        if (!listaSubgrupos || listaSubgrupos.length === 0) {
+            document.getElementById("codigo").value = 1;
+            return;
+        }
+        const codigosNumericos = listaSubgrupos.map(s => Number(s.codigo)).filter(n => !isNaN(n));
+        const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
+        document.getElementById("codigo").value = maiorCodigo + 1;
+    }
+
+    function filtrarSubgrupos() {
+        const termo = document.getElementById("busca").value.toLowerCase();
+        const filtrados = listaSubgrupos.filter(s => 
+            String(s.codigo).toLowerCase().includes(termo) || 
+            String(s.descricao).toLowerCase().includes(termo)
+        );
+        renderizarTabela(filtrados);
+    }
+
+    function limparTela() {
+        const form = document.getElementById("form-subgrupo");
+        if (form) form.reset();
+        document.getElementById("codigo").value = "";
+        bloquearFormulario();
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,160 @@
+/* ==========================================
+   1. RESET E ESTILOS GERAIS
+   ========================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #ffffff; /* Fundo geral da página */
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ==========================================
+   2. CONTAINER E CARD DE LOGIN
+   ========================================== */
+.login-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card ajustado exatamente com a cor e arredondamento do seu sidebar */
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background-color: #f6f6f6; /* Mesma cor de fundo do sidebar */
+  border-radius: 10px;       /* Mesmo raio de borda do sidebar */
+  padding: 32px 24px;
+  position: relative;
+  overflow: hidden;          /* Mantém o degradê contido no card */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Pseudo-elemento do degradê idêntico ao do sidebar */
+.login-card::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center, 
+    #344dcd 0%, 
+    rgba(52, 77, 205, 0.6) 35%, 
+    rgba(52, 77, 205, 0.2) 60%, 
+    rgba(248, 250, 252, 0) 80%
+  );
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Garantia de que os elementos internos fiquem visíveis sobre o degradê */
+.card-header,
+.login-form {
+  position: relative;
+  z-index: 2;
+}
+
+/* ==========================================
+   3. CABEÇALHO DO CARD (LOGO E TEXTOS)
+   ========================================== */
+.card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.logo-text h2 {
+  font-size: 22px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.logo-text span {
+  font-size: 11px;
+  color: #344dcd; /* Cor azul usada no projeto */
+  font-weight: 600;
+  display: block;
+}
+
+.welcome-text {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.header-divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 16px 0 0 0;
+}
+
+/* ==========================================
+   4. FORMULÁRIO E INPUTS
+   ========================================== */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px; /* Bordas arredondadas no padrão dos inputs do leiaute */
+  font-size: 14px;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: #334155;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  border-color: #344dcd;
+}
+
+.input-group input::placeholder {
+  color: #64748b;
+}
+
+/* ==========================================
+   5. BOTÃO DE LOGIN
+   ========================================== */
+.btn-login {
+  background-color: #344dcd; /* Mesma cor base do gradiente */
+  color: #ffffff;
+  border: none;
+  padding: 12px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.2s;
+}
+
+.btn-login:hover {
+  opacity: 0.9;
+}
+

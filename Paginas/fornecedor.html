@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Cadastro de Fornecedor</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://kit.fontawesome.com/4866ffbdb2.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <!-- BARRA LATERAL (SIDEBAR) -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <!-- Logo Pamptech -->
+      <div class="logo">
+        <img src="../img/pamptech-logo-bglight.png" alt="Logo Pamptech">
+      </div>
+      <!-- Menu de Navegação -->
+      <nav class="sidebar-menu">
+        <a href="../index.html" class="menu-item"><i class="fa-solid fa-house"></i>&emsp;Home</a>
+        <!-- DROPDOWN: CADASTROS -->
+        <div class="dropdown">
+          <a href="#" class="menu-item dropdown-btn">
+            <span>› Cadastros</span>
+            <span class="arrow">▾</span>
+          </a>
+          <div class="dropdown-content">
+            <a href="../Paginas/grupo.html" class="submenu-item"><i class="fa-solid fa-users"></i>&emsp;Grupo</a>
+            <a href="../Paginas/subgrupo.html" class="submenu-item"><i class="fa-solid fa-users-line"></i>&emsp;Subgrupo</a>
+            <a href="../Paginas/categoria.html" class="submenu-item"><i class="fa-regular fa-folder"></i>&emsp;Categoria</a>
+            <a href="../Paginas/subcategoria.html" class="submenu-item"><i class="fa-regular fa-folder-open"></i>&emsp;Subcategoria</a>
+          </div>
+        </div>
+        <a href="../Paginas/parametros.html" class="menu-item">› Parâmetros</a>
+        <a href="../Paginas/fornecedor.html" class="menu-item active">› Fornecedor</a>
+        <a href="../Paginas/materiaprima.html" class="menu-item">› Matéria-Prima</a>
+        <a href="../Paginas/produto.html" class="menu-item">› Produtos</a>
+        <a href="../Paginas/usuario.html" class="menu-item">› Usuários</a>
+        <a href="../Paginas/relatorio.html" class="menu-item">› Relatórios</a>
+      </nav>
+    </div>  
+    <hr class="menu-divider">
+    <!-- Rodapé do Sidebar -->
+    <div class="sidebar-footer">
+      <a href="#" id="btn-logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i>Sair</a>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO PRINCIPAL (MAIN) -->
+  <main class="main-content">
+    
+    <!-- DIV-USER: Bloco de perfil do usuário no topo -->
+    <header class="div-user">
+      <div class="user-profile">
+        <div class="user-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="user-info">
+          <span class="greeting">Bem Vindo!</span>
+          <strong class="username"><span id="nome-usuario" style="font-weight: bold; margin-right: 15px;"></span></strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- DIV-TITLE: Título da página e botões de ação -->
+    <section class="div-title">
+      <h1>Cadastro de Fornecedor</h1>
+      
+      <div class="action-buttons">
+        <button type="button" id="btn-incluir" class="btn btn-green">Incluir</button>
+        <button type="button" id="btn-salvar" class="btn btn-blue">Salvar</button>
+        <button type="button" id="btn-editar" class="btn btn-yellow">Editar</button>
+        <button type="button" id="btn-deletar" class="btn btn-red">Deletar</button>
+        <button type="button" id="btn-duplicar" class="btn btn-gray">Duplicar</button>
+      </div>
+    </section>
+
+    <!-- DIV-CAD: Formulário de cadastro de fornecedores -->
+    <section class="div-cad">
+      <form id="form-fornecedor">
+        <!-- SEÇÃO 1: DADOS PRINCIPAIS -->
+        <section class="card-section">
+          <span class="card-tag">Dados Principais</span>
+          <div class="form-grid">
+            <div class="form-group col-4">
+              <label for="codigo">Código:</label>
+              <input type="text" id="codigo" name="codigo" readonly placeholder="Gerado automaticamente" disabled>
+            </div>
+            <div class="form-group col-8">
+              <label for="razaoSocial">Razão Social:</label>
+              <input type="text" id="razaoSocial" name="razaoSocial" required disabled>
+            </div>
+            <div class="form-group col-3">
+              <label for="tipoPessoa">Tipo Pessoa:</label>
+              <select id="tipoPessoa" name="tipoPessoa" disabled>
+                <option value="juridica">Jurídica</option>
+                <option value="fisica">Física</option>
+              </select>
+            </div>
+            <div class="form-group col-3">
+              <label for="cnpjCpf" id="lbl-cnpjCpf">CNPJ:</label>
+              <input type="text" id="cnpjCpf" name="cnpjCpf" required disabled>
+            </div>
+            <div class="form-group col-3">
+              <label for="ie">Inscrição Estadual:</label>
+              <input type="text" id="ie" name="ie" disabled>
+            </div>
+            <div class="form-group col-3">
+              <label for="im">Inscrição Municipal:</label>
+              <input type="text" id="im" name="im" disabled>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 2: SITUAÇÃO -->
+        <section class="card-section">
+          <span class="card-tag">Situação</span>
+          <div class="form-grid align-center">
+            <div class="form-group-checkbox">
+              <label>
+                <input type="checkbox" name="situacao" value="Ativa" class="chk-situacao" disabled>
+                Ativa
+              </label>
+              &emsp;
+              <label>
+                <input type="checkbox" name="situacao" value="Inativa" class="chk-situacao" disabled>
+                Inativa
+              </label>
+              &emsp;
+              <label>
+                <input type="checkbox" name="situacao" value="Compra Proibida" class="chk-situacao" disabled>
+                Compra proibida
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 3: ENDEREÇO -->
+        <section class="card-section">
+          <span class="card-tag">Endereço</span>
+          <div class="form-grid">
+            <div class="form-group col-3">
+              <label for="cep">CEP:</label>
+              <input type="text" id="cep" name="cep" disabled placeholder="00000-000">
+            </div>
+            <div class="form-group col-6">
+              <label for="endereco">Endereço:</label>
+              <input type="text" id="endereco" name="endereco" disabled>
+            </div>
+            <div class="form-group col-3">
+              <label for="numero">Número:</label>
+              <input type="text" id="numero" name="numero" disabled>
+            </div>
+            <div class="form-group col-12">
+              <label for="complemento">Complemento:</label>
+              <input type="text" id="complemento" name="complemento" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="bairro">Bairro:</label>
+              <input type="text" id="bairro" name="bairro" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="municipio">Município:</label>
+              <input type="text" id="municipio" name="municipio" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="uf">UF:</label>
+              <input type="text" id="uf" name="uf" maxlength="2" disabled>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEÇÃO 4: CONTATO E CLASSIFICAÇÃO -->
+        <section class="card-section">
+          <span class="card-tag">Contato e Classificação</span>
+          <div class="form-grid">
+            <div class="form-group col-12">
+              <label for="comprador">Comprador:</label>
+              <input type="text" id="comprador" name="comprador" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="celular">Celular:</label>
+              <input type="text" id="celular" name="celular" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="telefone">Telefone:</label>
+              <input type="text" id="telefone" name="telefone" disabled>
+            </div>
+            <div class="form-group col-4">
+              <label for="ramal">Ramal:</label>
+              <input type="text" id="ramal" name="ramal" disabled>
+            </div>
+            <div class="form-group col-6">
+              <label for="email">E-mail:</label>
+              <input type="email" id="email" name="email" disabled>
+            </div>
+            <div class="form-group col-3">
+              <label for="grupo">Grupo:</label>
+              <select id="grupo" name="grupo" disabled>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+            <div class="form-group col-3">
+              <label for="subgrupo">Subgrupo:</label>
+              <select id="subgrupo" name="subgrupo" disabled>
+                <option value="">Selecione...</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      </form>
+
+      <!-- SEÇÃO 5: FORNECEDORES CADASTRADOS -->
+      <section class="list-section">
+        <div class="list-header">
+          <h2>Fornecedores Cadastrados</h2>
+          <div class="search-box">
+            <input type="text" id="busca" placeholder="Buscar por código, razão social, CNPJ/CPF ou situação...">
+            <button type="button" id="btn-buscar" class="btn btn-blue"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table id="tabela-fornecedores" class="data-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Razão Social</th>
+                <th>CNPJ/CPF</th>
+                <th>Situação</th>
+                <th>Telefone/Celular</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="6">Carregando fornecedores...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+  </main>
+
+  <script>
+    const API_URL = "/.netlify/functions/sheets";
+    
+    let listaFornecedores = [];
+    let modoAcao = "";
+
+    const camposForm = [
+      "razaoSocial", "tipoPessoa", "cnpjCpf", "ie", "im",
+      "cep", "endereco", "numero", "complemento", "bairro", "municipio", "uf",
+      "comprador", "celular", "telefone", "ramal", "email", "grupo", "subgrupo"
+    ];
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const usuarioLogado = localStorage.getItem("usuarioLogado");
+
+      if (!usuarioLogado) {
+        window.location.href = "../login.html";
+        return;
+      }
+
+      const userObj = JSON.parse(usuarioLogado);
+      const elNomeUsuario = document.getElementById("nome-usuario");
+      if (elNomeUsuario) elNomeUsuario.textContent = userObj.nome || userObj.usuario;
+
+      const btnLogout = document.getElementById("btn-logout");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", function (e) {
+          e.preventDefault();
+          localStorage.removeItem("usuarioLogado");
+          window.location.href = "../login.html";
+        });
+      }
+
+      bloquearFormulario();
+      carregarCombos();
+      carregarFornecedores();
+
+      document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
+      document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
+      document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
+      document.getElementById("btn-deletar").addEventListener("click", deletarFornecedor);
+      
+      const btnDuplicar = document.getElementById("btn-duplicar");
+      if (btnDuplicar) btnDuplicar.addEventListener("click", duplicarFornecedor);
+      
+      const inputBusca = document.getElementById("busca");
+      if (inputBusca) inputBusca.addEventListener("input", filtrarFornecedores);
+      
+      const btnBuscar = document.getElementById("btn-buscar");
+      if (btnBuscar) btnBuscar.addEventListener("click", filtrarFornecedores);
+
+      document.getElementById("tipoPessoa").addEventListener("change", atualizarLabelCnpjCpf);
+      document.getElementById("cep").addEventListener("blur", buscarCep);
+
+      const checkboxesSituacao = document.querySelectorAll('.chk-situacao');
+      checkboxesSituacao.forEach(chk => {
+        chk.addEventListener('change', function() {
+          if (this.checked) {
+            checkboxesSituacao.forEach(c => { if (c !== this) c.checked = false; });
+          }
+        });
+      });
+    });
+
+    function bloquearFormulario() {
+      camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = true;
+      });
+
+      document.querySelectorAll('.chk-situacao').forEach(chk => chk.disabled = true);
+      modoAcao = "";
+    }
+
+    function desbloquearFormulario() {
+      camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = false;
+      });
+
+      document.querySelectorAll('.chk-situacao').forEach(chk => chk.disabled = false);
+      document.getElementById("razaoSocial").focus();
+    }
+
+    function atualizarLabelCnpjCpf() {
+      const tipo = document.getElementById("tipoPessoa").value;
+      const lbl = document.getElementById("lbl-cnpjCpf");
+      lbl.textContent = tipo === "fisica" ? "CPF:" : "CNPJ:";
+    }
+
+    function obterSituacaoSelecionada() {
+      const chk = document.querySelector('.chk-situacao:checked');
+      return chk ? chk.value : '';
+    }
+
+    function definirSituacaoSelecionada(valor) {
+      document.querySelectorAll('.chk-situacao').forEach(chk => {
+        chk.checked = (chk.value.toLowerCase() === String(valor).toLowerCase());
+      });
+    }
+
+    function buscarCep() {
+      const cepVal = document.getElementById("cep").value.replace(/\D/g, '');
+      if (cepVal.length === 8) {
+        fetch(`https://viacep.com.br/ws/${cepVal}/json/`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.erro) {
+              document.getElementById("endereco").value = data.logradouro || "";
+              document.getElementById("bairro").value = data.bairro || "";
+              document.getElementById("municipio").value = data.localidade || "";
+              document.getElementById("uf").value = data.uf || "";
+              document.getElementById("numero").focus();
+            }
+          })
+          .catch(err => console.error("Erro ao buscar CEP:", err));
+      }
+    }
+
+    function carregarCombos() {
+      fetch(`${API_URL}?aba=Grupos`)
+        .then(r => r.json())
+        .then(dados => {
+          const select = document.getElementById("grupo");
+          select.innerHTML = '<option value="">Selecione...</option>';
+          if (Array.isArray(dados)) {
+            dados.forEach(item => {
+              select.innerHTML += `<option value="${item.descricao}">${item.descricao}</option>`;
+            });
+          }
+        })
+        .catch(err => console.error("Erro ao carregar grupos:", err));
+
+      fetch(`${API_URL}?aba=Subgrupos`)
+        .then(r => r.json())
+        .then(dados => {
+          const select = document.getElementById("subgrupo");
+          select.innerHTML = '<option value="">Selecione...</option>';
+          if (Array.isArray(dados)) {
+            dados.forEach(item => {
+              select.innerHTML += `<option value="${item.descricao}">${item.descricao}</option>`;
+            });
+          }
+        })
+        .catch(err => console.error("Erro ao carregar subgrupos:", err));
+    }
+
+    function iniciarInclusao() {
+      modoAcao = "incluir";
+      document.getElementById("form-fornecedor").reset();
+      desbloquearFormulario();
+      
+      definirSituacaoSelecionada('Ativa');
+      atualizarLabelCnpjCpf();
+      gerarProximoCodigoSequencial();
+    }
+
+    function iniciarEdicao() {
+      const codigo = document.getElementById("codigo").value;
+      if (!codigo) {
+        alert("Selecione um fornecedor da lista para editar.");
+        return;
+      }
+      modoAcao = "editar";
+      desbloquearFormulario();
+    }
+
+    function duplicarFornecedor() {
+      const codigo = document.getElementById("codigo").value;
+      if (!codigo) {
+        alert("Selecione um fornecedor da lista para duplicar.");
+        return;
+      }
+
+      modoAcao = "incluir";
+      desbloquearFormulario();
+      
+      gerarProximoCodigoSequencial();
+      document.getElementById("razaoSocial").value += " (Cópia)";
+    }
+
+    function salvarOuAlterar() {
+      if (!modoAcao) {
+        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
+        return;
+      }
+
+      const razaoSocial = document.getElementById("razaoSocial").value.trim();
+      const cnpjCpf = document.getElementById("cnpjCpf").value.trim();
+
+      if (!razaoSocial || !cnpjCpf) {
+        alert("Preencha a Razão Social e o CNPJ/CPF.");
+        return;
+      }
+
+      const dadosPayload = { codigo: document.getElementById("codigo").value };
+      camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) dadosPayload[id] = el.value.trim();
+      });
+
+      dadosPayload["situacao"] = obterSituacaoSelecionada();
+
+      const payload = {
+        aba: "Fornecedores",
+        acao: "salvar",
+        dados: dadosPayload
+      };
+
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "sucesso") {
+          alert(modoAcao === "incluir" ? "Fornecedor cadastrado com sucesso!" : "Fornecedor alterado com sucesso!");
+          limparTela();
+          carregarFornecedores();
+        } else {
+          alert("Erro: " + (res.mensagem || res.message));
+        }
+      })
+      .catch(error => {
+        console.error("Erro ao salvar fornecedor:", error);
+        alert("Erro ao processar a solicitação.");
+      });
+    }
+
+    function deletarFornecedor() {
+      const codigo = document.getElementById("codigo").value;
+      if (!codigo) {
+        alert("Selecione um fornecedor da lista para deletar.");
+        return;
+      }
+
+      if (!confirm(`Deseja realmente excluir o fornecedor código ${codigo}?`)) {
+        return;
+      }
+
+      const payload = {
+        aba: "Fornecedores",
+        acao: "deletar",
+        dados: { codigo: codigo }
+      };
+
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "sucesso") {
+          alert("Fornecedor deletado com sucesso!");
+          limparTela();
+          carregarFornecedores();
+        } else {
+          alert("Erro ao deletar: " + (res.mensagem || res.message));
+        }
+      })
+      .catch(error => {
+        console.error("Erro ao deletar fornecedor:", error);
+        alert("Erro ao excluir o fornecedor.");
+      });
+    }
+
+    function carregarFornecedores() {
+      fetch(`${API_URL}?aba=Fornecedores`)
+        .then(r => r.json())
+        .then(dados => {
+          listaFornecedores = Array.isArray(dados) ? dados : [];
+          renderizarTabela(listaFornecedores);
+        })
+        .catch(err => {
+          console.error("Erro ao carregar fornecedores:", err);
+          const tbody = document.querySelector("#tabela-fornecedores tbody");
+          tbody.innerHTML = '<tr><td colspan="6">Erro ao carregar os fornecedores.</td></tr>';
+        });
+    }
+
+    function renderizarTabela(dados) {
+      const tbody = document.querySelector("#tabela-fornecedores tbody");
+      tbody.innerHTML = "";
+
+      if (!dados || dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">Nenhum fornecedor cadastrado.</td></tr>';
+        return;
+      }
+
+      dados.forEach(forn => {
+        const tr = document.createElement("tr");
+        const contato = forn.celular || forn.telefone || '';
+        tr.innerHTML = `
+          <td>${forn.codigo || ''}</td>
+          <td>${forn.razaoSocial || ''}</td>
+          <td>${forn.cnpjCpf || ''}</td>
+          <td>${forn.situacao || ''}</td>
+          <td>${contato}</td>
+          <td>
+            <button type="button" class="btn-link" onclick="selecionarFornecedor('${forn.codigo}')">Selecionar</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function selecionarFornecedor(codigo) {
+      const forn = listaFornecedores.find(f => String(f.codigo) === String(codigo));
+      if (!forn) return;
+
+      document.getElementById("codigo").value = forn.codigo || '';
+      camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = forn[id] || '';
+      });
+
+      definirSituacaoSelecionada(forn.situacao || '');
+      atualizarLabelCnpjCpf();
+      bloquearFormulario();
+    }
+
+    function gerarProximoCodigoSequencial() {
+      if (listaFornecedores.length === 0) {
+        document.getElementById("codigo").value = 1;
+        return;
+      }
+      const codigosNumericos = listaFornecedores.map(f => Number(f.codigo)).filter(n => !isNaN(n));
+      const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
+      document.getElementById("codigo").value = maiorCodigo + 1;
+    }
+
+    function filtrarFornecedores() {
+      const elBusca = document.getElementById("busca");
+      if (!elBusca) return;
+
+      const termo = elBusca.value.toLowerCase();
+      const filtrados = listaFornecedores.filter(f => 
+        String(f.codigo || '').toLowerCase().includes(termo) || 
+        String(f.razaoSocial || '').toLowerCase().includes(termo) ||
+        String(f.cnpjCpf || '').toLowerCase().includes(termo) ||
+        String(f.situacao || '').toLowerCase().includes(termo)
+      );
+      renderizarTabela(filtrados);
+    }
+
+    function limparTela() {
+      document.getElementById("form-fornecedor").reset();
+      document.getElementById("codigo").value = "";
+      document.querySelectorAll('.chk-situacao').forEach(chk => chk.checked = false);
+      bloquearFormulario();
+    }
+  </script>
+</body>
+</html>

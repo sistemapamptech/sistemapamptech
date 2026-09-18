@@ -130,29 +130,34 @@
 
   </main>
 
-  <script>
-    const API_URL = "/.netlify/functions/sheets";
-    
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     let listaSubcategorias = [];
     let modoAcao = "";
 
     document.addEventListener("DOMContentLoaded", function () {
-        // Validação de Sessão
         const usuarioLogado = localStorage.getItem("usuarioLogado");
+        if (!usuarioLogado) { window.location.href = "../login.html"; return; }
 
-        if (!usuarioLogado) {
-            window.location.href = "../login.html";
-            return;
-        }
-
-        // Preenche o nome do usuário no topo
         const userObj = JSON.parse(usuarioLogado);
         const campoUsuario = document.getElementById("nome-usuario");
-        if (campoUsuario && userObj.nome) {
-            campoUsuario.textContent = userObj.nome;
-        }
+        if (campoUsuario && userObj.nome) campoUsuario.textContent = userObj.nome;
 
-        // Evento do botão Sair
         const btnLogout = document.getElementById("btn-logout");
         if (btnLogout) {
             btnLogout.addEventListener("click", function (e) {
@@ -162,7 +167,6 @@
             });
         }
 
-        // Inicialização do Formulário e Ações
         bloquearFormulario();
         carregarSubcategorias();
 
@@ -170,195 +174,102 @@
         document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
         document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
         document.getElementById("btn-deletar").addEventListener("click", deletarSubcategoria);
-        
         document.getElementById("busca").addEventListener("input", filtrarSubcategorias);
         document.getElementById("btn-buscar").addEventListener("click", filtrarSubcategorias);
     });
 
-    function bloquearFormulario() {
-        document.getElementById("descricao").disabled = true;
-        modoAcao = "";
-    }
-
-    function desbloquearFormulario() {
-        document.getElementById("descricao").disabled = false;
-        document.getElementById("descricao").focus();
-    }
+    function bloquearFormulario() { document.getElementById("descricao").disabled = true; modoAcao = ""; }
+    function desbloquearFormulario() { document.getElementById("descricao").disabled = false; document.getElementById("descricao").focus(); }
 
     function iniciarInclusao() {
         modoAcao = "incluir";
-        const form = document.getElementById("form-subcategoria");
+        const form = document.getElementById("form-subcategoria") || document.getElementById("form-categoria");
         if (form) form.reset();
         desbloquearFormulario();
         gerarProximoCodigoSequencial();
     }
 
     function iniciarEdicao() {
-        const codigo = document.getElementById("codigo").value;
-        if (!codigo) {
-            alert("Selecione uma subcategoria da lista abaixo para editar.");
-            return;
-        }
+        if (!document.getElementById("codigo").value) { alert("Selecione uma subcategoria para editar."); return; }
         modoAcao = "editar";
         desbloquearFormulario();
     }
 
-    function salvarOuAlterar() {
-        if (!modoAcao) {
-            alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-            return;
-        }
+    async function salvarOuAlterar() {
+        if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
+        const desc = document.getElementById("descricao").value.trim();
+        if (!desc) { alert("Preencha a descrição antes de salvar."); return; }
 
-        const descricaoInput = document.getElementById("descricao");
-        if (!descricaoInput.value.trim()) {
-            alert("Preencha a descrição antes de salvar.");
-            descricaoInput.focus();
-            return;
-        }
-
-        const codigoVal = document.getElementById("codigo").value;
-        const descricaoVal = descricaoInput.value.trim();
-
-        const payload = {
-            aba: "Subcategorias",
-            acao: "salvar",
-            dados: {
-                codigo: codigoVal,
-                descricao: descricaoVal
-            }
-        };
-
-        fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === "sucesso") {
-                alert(modoAcao === "incluir" ? "Subcategoria cadastrada com sucesso!" : "Subcategoria alterada com sucesso!");
-                limparTela();
-                carregarSubcategorias();
-            } else {
-                alert("Erro: " + res.message);
-            }
-        })
-        .catch(error => {
-            console.error("Erro ao salvar subcategoria:", error);
-            alert("Erro ao processar a solicitação.");
-        });
+        const cod = String(document.getElementById("codigo").value).trim();
+        try {
+            await setDoc(doc(db, "subcategorias", cod), { codigo: cod, descricao: desc });
+            alert(modoAcao === "incluir" ? "Subcategoria cadastrada com sucesso!" : "Subcategoria alterada com sucesso!");
+            limparTela();
+            carregarSubcategorias();
+        } catch (e) { console.error("Erro ao salvar no Firestore:", e); }
     }
 
-    function deletarSubcategoria() {
-        const codigo = document.getElementById("codigo").value;
-        if (!codigo) {
-            alert("Selecione uma subcategoria da lista para deletar.");
-            return;
-        }
+    async function deletarSubcategoria() {
+        const cod = String(document.getElementById("codigo").value).trim();
+        if (!cod) { alert("Selecione uma subcategoria para deletar."); return; }
+        if (!confirm(`Deseja realmente excluir a subcategoria código ${cod}?`)) return;
 
-        if (!confirm(`Deseja realmente excluir a subcategoria código ${codigo}?`)) {
-            return;
-        }
-
-        const payload = {
-            aba: "Subcategorias",
-            acao: "deletar",
-            dados: { 
-                codigo: codigo 
-            }
-        };
-
-        fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === "sucesso") {
-                alert("Subcategoria deletada com sucesso!");
-                limparTela();
-                carregarSubcategorias();
-            } else {
-                alert("Erro ao deletar: " + (res.mensagem || res.message));
-            }
-        })
-        .catch(error => {
-            console.error("Erro ao deletar subcategoria:", error);
-            alert("Erro ao excluir a subcategoria.");
-        });
+        try {
+            await deleteDoc(doc(db, "subcategorias", cod));
+            alert("Subcategoria deletada com sucesso!");
+            limparTela();
+            carregarSubcategorias();
+        } catch (e) { console.error("Erro ao deletar no Firestore:", e); }
     }
 
-    function carregarSubcategorias() {
-        fetch(`${API_URL}?aba=Subcategorias`)
-            .then(response => response.json())
-            .then(dados => {
-                listaSubcategorias = dados;
-                renderizarTabela(listaSubcategorias);
-            })
-            .catch(error => {
-                console.error("Erro ao carregar subcategorias:", error);
-            });
+    async function carregarSubcategorias() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "subcategorias"));
+            listaSubcategorias = [];
+            querySnapshot.forEach(docSnap => listaSubcategorias.push(docSnap.data()));
+            listaSubcategorias.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+            renderizarTabela(listaSubcategorias);
+        } catch (e) { console.error("Erro ao carregar do Firestore:", e); }
     }
 
     function renderizarTabela(dados) {
-        const tbody = document.querySelector("#tabela-subcategorias tbody");
+        const tbody = document.querySelector("#tabela-subcategorias tbody") || document.querySelector("table tbody");
         tbody.innerHTML = "";
+        if (!dados || dados.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhuma subcategoria cadastrada.</td></tr>'; return; }
 
-        if (!Array.isArray(dados) || dados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3">Nenhuma subcategoria cadastrada.</td></tr>';
-            return;
-        }
-
-        dados.forEach(sub => {
+        dados.forEach(sc => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${sub.codigo || ''}</td>
-                <td>${sub.descricao || ''}</td>
-                <td>
-                    <button type="button" class="btn-link" onclick="selecionarSubcategoria('${sub.codigo}', '${sub.descricao}')">Selecionar</button>
-                </td>
-            `;
+            tr.innerHTML = `<td>${sc.codigo || ''}</td><td>${sc.descricao || ''}</td><td><button type="button" class="btn-link" data-codigo="${sc.codigo}" data-descricao="${sc.descricao}">Selecionar</button></td>`;
             tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll(".btn-link").forEach(btn => {
+            btn.addEventListener("click", function() {
+                document.getElementById("codigo").value = this.getAttribute("data-codigo");
+                document.getElementById("descricao").value = this.getAttribute("data-descricao");
+                bloquearFormulario();
+            });
         });
     }
 
-    function selecionarSubcategoria(codigo, descricao) {
-        document.getElementById("codigo").value = codigo;
-        document.getElementById("descricao").value = descricao;
-        bloquearFormulario();
-    }
-
     function gerarProximoCodigoSequencial() {
-        if (!listaSubcategorias || listaSubcategorias.length === 0) {
-            document.getElementById("codigo").value = 1;
-            return;
-        }
-        const codigosNumericos = listaSubcategorias.map(s => Number(s.codigo)).filter(n => !isNaN(n));
-        const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-        document.getElementById("codigo").value = maiorCodigo + 1;
+        if (!listaSubcategorias.length) { document.getElementById("codigo").value = 1; return; }
+        const nums = listaSubcategorias.map(sc => Number(sc.codigo)).filter(n => !isNaN(n));
+        document.getElementById("codigo").value = (nums.length ? Math.max(...nums) : 0) + 1;
     }
 
     function filtrarSubcategorias() {
         const termo = document.getElementById("busca").value.toLowerCase();
-        const filtrados = listaSubcategorias.filter(s => 
-            String(s.codigo).toLowerCase().includes(termo) || 
-            String(s.descricao).toLowerCase().includes(termo)
-        );
-        renderizarTabela(filtrados);
+        renderizarTabela(listaSubcategorias.filter(sc => String(sc.codigo).toLowerCase().includes(termo) || String(sc.descricao).toLowerCase().includes(termo)));
     }
 
     function limparTela() {
-        const form = document.getElementById("form-subcategoria");
+        const form = document.getElementById("form-subcategoria") || document.getElementById("form-categoria");
         if (form) form.reset();
         document.getElementById("codigo").value = "";
         bloquearFormulario();
     }
-  </script>
+</script>
 
 </body>
 </html>

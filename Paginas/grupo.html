@@ -129,26 +129,34 @@
     </section>
   </main>
 
-  <script>
-    const API_URL = "/.netlify/functions/sheets";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     let listaGrupos = [];
     let modoAcao = "";
 
     document.addEventListener("DOMContentLoaded", function () {
-        // Validação de Sessão
         const usuarioLogado = localStorage.getItem("usuarioLogado");
-        if (!usuarioLogado) {
-            window.location.href = "../login.html";
-            return;
-        }
+        if (!usuarioLogado) { window.location.href = "../login.html"; return; }
 
         const userObj = JSON.parse(usuarioLogado);
         const campoUsuario = document.getElementById("nome-usuario");
-        if (campoUsuario && userObj.nome) {
-            campoUsuario.textContent = userObj.nome;
-        }
+        if (campoUsuario && userObj.nome) campoUsuario.textContent = userObj.nome;
 
-        // Evento Logout
         const btnLogout = document.getElementById("btn-logout");
         if (btnLogout) {
             btnLogout.addEventListener("click", function (e) {
@@ -158,29 +166,19 @@
             });
         }
 
-        // Inicialização da Tela
         bloquearFormulario();
         carregarGrupos();
 
-        // Associação dos Botões de Ação
         document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
         document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
         document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
         document.getElementById("btn-deletar").addEventListener("click", deletarGrupo);
-        
         document.getElementById("busca").addEventListener("input", filtrarGrupos);
         document.getElementById("btn-buscar").addEventListener("click", filtrarGrupos);
     });
 
-    function bloquearFormulario() {
-        document.getElementById("descricao").disabled = true;
-        modoAcao = "";
-    }
-
-    function desbloquearFormulario() {
-        document.getElementById("descricao").disabled = false;
-        document.getElementById("descricao").focus();
-    }
+    function bloquearFormulario() { document.getElementById("descricao").disabled = true; modoAcao = ""; }
+    function desbloquearFormulario() { document.getElementById("descricao").disabled = false; document.getElementById("descricao").focus(); }
 
     function iniciarInclusao() {
         modoAcao = "incluir";
@@ -191,162 +189,77 @@
     }
 
     function iniciarEdicao() {
-        const codigo = document.getElementById("codigo").value;
-        if (!codigo) {
-            alert("Selecione um grupo da lista abaixo para editar.");
-            return;
-        }
+        if (!document.getElementById("codigo").value) { alert("Selecione um grupo para editar."); return; }
         modoAcao = "editar";
         desbloquearFormulario();
     }
 
-    function salvarOuAlterar() {
-        if (!modoAcao) {
-            alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-            return;
-        }
+    async function salvarOuAlterar() {
+        if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
+        const desc = document.getElementById("descricao").value.trim();
+        if (!desc) { alert("Preencha a descrição antes de salvar."); return; }
 
-        const descricaoInput = document.getElementById("descricao");
-        if (!descricaoInput.value.trim()) {
-            alert("Preencha a descrição antes de salvar.");
-            descricaoInput.focus();
-            return;
-        }
-
-        const codigoVal = document.getElementById("codigo").value;
-        const descricaoVal = descricaoInput.value.trim();
-
-        const payload = {
-            aba: "Grupos",
-            acao: "salvar",
-            dados: {
-                codigo: codigoVal,
-                descricao: descricaoVal
-            }
-        };
-
-        fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(res => {
-            if(res.status === "sucesso") {
-                alert(modoAcao === "incluir" ? "Grupo cadastrado com sucesso!" : "Grupo alterado com sucesso!");
-                limparTela();
-                carregarGrupos();
-            } else {
-                alert("Erro: " + res.message);
-            }
-        })
-        .catch(error => {
-            console.error("Erro ao salvar grupo:", error);
-            alert("Erro ao processar a solicitação.");
-        });
+        const cod = String(document.getElementById("codigo").value).trim();
+        try {
+            await setDoc(doc(db, "grupos", cod), { codigo: cod, descricao: desc });
+            alert(modoAcao === "incluir" ? "Grupo cadastrado com sucesso!" : "Grupo alterado com sucesso!");
+            limparTela();
+            carregarGrupos();
+        } catch (e) { console.error("Erro ao salvar no Firestore:", e); }
     }
 
-    function deletarGrupo() {
-        const codigo = document.getElementById("codigo").value;
-        if (!codigo) {
-            alert("Selecione um grupo da lista para deletar.");
-            return;
-        }
+    async function deletarGrupo() {
+        const cod = String(document.getElementById("codigo").value).trim();
+        if (!cod) { alert("Selecione um grupo para deletar."); return; }
+        if (!confirm(`Deseja realmente excluir o grupo código ${cod}?`)) return;
 
-        if (!confirm(`Deseja realmente excluir o grupo código ${codigo}?`)) {
-            return;
-        }
-
-        const payload = {
-            aba: "Grupos",
-            acao: "deletar",
-            dados: { 
-                codigo: codigo 
-            }
-        };
-
-        fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(res => {
-            if(res.status === "sucesso") {
-                alert("Grupo deletado com sucesso!");
-                limparTela();
-                carregarGrupos();
-            } else {
-                alert("Erro ao deletar: " + (res.mensagem || res.message));
-            }
-        })
-        .catch(error => {
-            console.error("Erro ao deletar grupo:", error);
-            alert("Erro ao excluir o grupo.");
-        });
+        try {
+            await deleteDoc(doc(db, "grupos", cod));
+            alert("Grupo deletado com sucesso!");
+            limparTela();
+            carregarGrupos();
+        } catch (e) { console.error("Erro ao deletar no Firestore:", e); }
     }
 
-    function carregarGrupos() {
-        fetch(`${API_URL}?aba=Grupos`)
-            .then(response => response.json())
-            .then(dados => {
-                listaGrupos = dados;
-                renderizarTabela(listaGrupos);
-            })
-            .catch(error => {
-                console.error("Erro ao carregar grupos:", error);
-            });
+    async function carregarGrupos() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "grupos"));
+            listaGrupos = [];
+            querySnapshot.forEach(docSnap => listaGrupos.push(docSnap.data()));
+            listaGrupos.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+            renderizarTabela(listaGrupos);
+        } catch (e) { console.error("Erro ao carregar do Firestore:", e); }
     }
 
     function renderizarTabela(dados) {
         const tbody = document.querySelector("#tabela-grupos tbody");
         tbody.innerHTML = "";
+        if (!dados || dados.length === 0) { tbody.innerHTML = '<tr><td colspan="3">Nenhum grupo cadastrado.</td></tr>'; return; }
 
-        if (!Array.isArray(dados) || dados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3">Nenhum grupo cadastrado.</td></tr>';
-            return;
-        }
-
-        dados.forEach(grupo => {
+        dados.forEach(g => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${grupo.codigo || ''}</td>
-                <td>${grupo.descricao || ''}</td>
-                <td>
-                    <button type="button" class="btn-link" onclick="selecionarGrupo('${grupo.codigo}', '${grupo.descricao}')">Selecionar</button>
-                </td>
-            `;
+            tr.innerHTML = `<td>${g.codigo || ''}</td><td>${g.descricao || ''}</td><td><button type="button" class="btn-link" data-codigo="${g.codigo}" data-descricao="${g.descricao}">Selecionar</button></td>`;
             tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll(".btn-link").forEach(btn => {
+            btn.addEventListener("click", function() {
+                document.getElementById("codigo").value = this.getAttribute("data-codigo");
+                document.getElementById("descricao").value = this.getAttribute("data-descricao");
+                bloquearFormulario();
+            });
         });
     }
 
-    function selecionarGrupo(codigo, descricao) {
-        document.getElementById("codigo").value = codigo;
-        document.getElementById("descricao").value = descricao;
-        bloquearFormulario();
-    }
-
     function gerarProximoCodigoSequencial() {
-        if (!listaGrupos || listaGrupos.length === 0) {
-            document.getElementById("codigo").value = 1;
-            return;
-        }
-        const codigosNumericos = listaGrupos.map(g => Number(g.codigo)).filter(n => !isNaN(n));
-        const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-        document.getElementById("codigo").value = maiorCodigo + 1;
+        if (!listaGrupos.length) { document.getElementById("codigo").value = 1; return; }
+        const nums = listaGrupos.map(g => Number(g.codigo)).filter(n => !isNaN(n));
+        document.getElementById("codigo").value = (nums.length ? Math.max(...nums) : 0) + 1;
     }
 
     function filtrarGrupos() {
         const termo = document.getElementById("busca").value.toLowerCase();
-        const filtrados = listaGrupos.filter(g => 
-            String(g.codigo).toLowerCase().includes(termo) || 
-            String(g.descricao).toLowerCase().includes(termo)
-        );
-        renderizarTabela(filtrados);
+        renderizarTabela(listaGrupos.filter(g => String(g.codigo).toLowerCase().includes(termo) || String(g.descricao).toLowerCase().includes(termo)));
     }
 
     function limparTela() {
@@ -355,7 +268,7 @@
         document.getElementById("codigo").value = "";
         bloquearFormulario();
     }
-  </script>
+</script>
 
 </body>
 </html>

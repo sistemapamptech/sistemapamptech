@@ -290,502 +290,205 @@
 
   </main>
 
-<script>
-const API_URL = "/.netlify/functions/sheets";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-let listaProdutos = [];
-let listaMateriasPrimas = [];
-let listaParametros = [];
-let composicaoFichaTecnica = [];
-let modoAcao = "";
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
 
-const camposForm = [
-    "descricao", "ncm", "grupo", "subgrupo", "categoria", "subcategoria",
-    "unidade", "dataCadastro", "dataAlteracao", "parametro-geral"
-];
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-document.addEventListener("DOMContentLoaded", function () {
-    const usuarioLogado = localStorage.getItem("usuarioLogado");
-    if (!usuarioLogado) {
-        window.location.href = "../login.html";
-        return;
-    }
+    let listaProdutos = [];
+    let modoAcao = "";
 
-    const userObj = JSON.parse(usuarioLogado);
-    const elemNomeUsuario = document.getElementById("nome-usuario");
-    if (elemNomeUsuario) {
-        elemNomeUsuario.textContent = userObj.nome || "Usuário";
-    }
-
-    const btnLogout = document.getElementById("btn-logout");
-    if (btnLogout) {
-        btnLogout.addEventListener("click", function (e) {
-            e.preventDefault();
-            localStorage.removeItem("usuarioLogado");
-            window.location.href = "../login.html";
-        });
-    }
-
-    bloquearFormulario();
-    carregarCombos();
-    carregarProdutos();
-
-    document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
-    document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
-    document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
-    
-    const btnDuplicar = document.getElementById("btn-duplicar");
-    if (btnDuplicar) {
-        btnDuplicar.addEventListener("click", duplicarProduto);
-    }
-
-    document.getElementById("btn-deletar").addEventListener("click", deletarProduto);
-    
-    document.getElementById("busca").addEventListener("input", filtrarProdutos);
-    document.getElementById("btn-buscar").addEventListener("click", filtrarProdutos);
-
-    document.getElementById("btn-inserir-componente").addEventListener("click", adicionarItemFicha);
-    document.getElementById("parametro-geral").addEventListener("change", aplicarParametrosGerais);
-});
-
-function obterNomeUsuarioAtivo() {
-    const usuarioLogado = localStorage.getItem("usuarioLogado");
-    if (usuarioLogado) {
-        try {
-            const userObj = JSON.parse(usuarioLogado);
-            return userObj.nome || "Usuário";
-        } catch (e) {
-            return "Usuário";
-        }
-    }
-    return "Usuário";
-}
-
-function obterDataComUsuario() {
-    const hoje = new Date();
-    const dia = String(hoje.getDate()).padStart(2, '0');
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const ano = hoje.getFullYear();
-    const dataFormatada = `${dia}/${mes}/${ano}`;
-    const usuario = obterNomeUsuarioAtivo();
-
-    return `${dataFormatada} por ${usuario}`;
-}
-
-function bloquearFormulario() {
-    camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = true;
-    });
-    document.getElementById("input-materia-prima").disabled = true;
-    document.getElementById("quantidade-mp").disabled = true;
-    document.getElementById("btn-inserir-componente").disabled = true;
-    modoAcao = "";
-}
-
-function desbloquearFormulario() {
-    camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && id !== "dataCadastro" && id !== "dataAlteracao") {
-            el.disabled = false;
-        }
-    });
-    document.getElementById("input-materia-prima").disabled = false;
-    document.getElementById("quantidade-mp").disabled = false;
-    document.getElementById("btn-inserir-componente").disabled = false;
-    document.getElementById("descricao").focus();
-}
-
-function carregarCombos() {
-    const tabelas = [
-        { id: "grupo", aba: "Grupos" },
-        { id: "subgrupo", aba: "Subgrupos" },
-        { id: "categoria", aba: "Categorias" },
-        { id: "subcategoria", aba: "Subcategorias" }
+    const camposForm = [
+      "descricao", "ncm", "grupo", "subgrupo", "unidade", "categoria", "subcategoria",
+      "precoCusto", "margemLucro", "precoVenda"
     ];
 
-    tabelas.forEach(item => {
-        fetch(`${API_URL}?aba=${item.aba}`)
-            .then(r => r.json())
-            .then(dados => {
-                const select = document.getElementById(item.id);
-                if (select) {
-                    select.innerHTML = '<option value="">Selecione...</option>';
-                    dados.forEach(d => {
-                        select.innerHTML += `<option value="${d.descricao}">${d.descricao}</option>`;
-                    });
-                }
-            })
-            .catch(err => console.error(`Erro ao carregar combo ${item.aba}:`, err));
+    document.addEventListener("DOMContentLoaded", function () {
+      const usuarioLogado = localStorage.getItem("usuarioLogado");
+      if (!usuarioLogado) { window.location.href = "../login.html"; return; }
+
+      const userObj = JSON.parse(usuarioLogado);
+      if (document.getElementById("nome-usuario")) document.getElementById("nome-usuario").textContent = userObj.nome;
+
+      const btnLogout = document.getElementById("btn-logout");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", function (e) {
+          e.preventDefault();
+          localStorage.removeItem("usuarioLogado");
+          window.location.href = "../login.html";
+        });
+      }
+
+      bloquearFormulario();
+      carregarCombos();
+      carregarProdutos();
+
+      document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
+      document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
+      document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
+      document.getElementById("btn-deletar").addEventListener("click", deletarProduto);
+      document.getElementById("busca").addEventListener("input", filtrarProdutos);
+      document.getElementById("btn-buscar").addEventListener("click", filtrarProdutos);
     });
 
-    fetch(`${API_URL}?aba=MateriasPrimas`)
-        .then(r => r.json())
-        .then(dados => {
-            listaMateriasPrimas = dados;
-            const datalist = document.getElementById("lista-materias-primas");
-            if (datalist) {
-                datalist.innerHTML = "";
-                dados.forEach(mp => {
-                    datalist.innerHTML += `<option value="[${mp.codigo}] ${mp.descricao}">`;
-                });
-            }
-        })
-        .catch(err => console.error("Erro ao carregar matérias-primas:", err));
-
-    fetch(`${API_URL}?aba=ParametrosGerais`)
-        .then(r => r.json())
-        .then(dados => {
-            listaParametros = dados;
-            const select = document.getElementById("parametro-geral");
-            if (select) {
-                select.innerHTML = '<option value="">Selecione o Parâmetro...</option>';
-                dados.forEach(p => {
-                    select.innerHTML += `<option value="${p.codigo}">${p.descricao || 'Parâmetro ' + p.codigo}</option>`;
-                });
-            }
-        })
-        .catch(err => console.error("Erro ao carregar parâmetros:", err));
-}
-
-function adicionarItemFicha() {
-    const valorInput = document.getElementById("input-materia-prima").value.trim();
-    const qtd = parseFloat(document.getElementById("quantidade-mp").value);
-
-    if (!valorInput || isNaN(qtd) || qtd <= 0) {
-        alert("Selecione uma matéria-prima válida e informe a quantidade.");
-        return;
+    function bloquearFormulario() {
+      camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+      modoAcao = "";
     }
 
-    const mp = listaMateriasPrimas.find(m => 
-        `[${m.codigo}] ${m.descricao}` === valorInput || 
-        String(m.codigo) === valorInput || 
-        m.descricao.toLowerCase() === valorInput.toLowerCase()
-    );
-
-    if (!mp) {
-        alert("Matéria-prima não encontrada. Selecione uma opção válida da lista.");
-        return;
+    function desbloquearFormulario() {
+      camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+      document.getElementById("descricao").focus();
     }
 
-    const valorUnit = parseFloat(mp.valorUnitario) || 0;
-    const subtotal = valorUnit * qtd;
+    async function carregarCombos() {
+      const tabelasCombos = [
+        { id: "grupo", col: "grupos" },
+        { id: "subgrupo", col: "subgrupos" },
+        { id: "categoria", col: "categorias" },
+        { id: "subcategoria", col: "subcategorias" }
+      ];
 
-    composicaoFichaTecnica.push({
-        codigoMp: mp.codigo,
-        descricaoMp: mp.descricao,
-        quantidade: qtd,
-        custoUnitario: valorUnit,
-        subtotal: subtotal
-    });
+      for (const item of tabelasCombos) {
+        try {
+          const snap = await getDocs(collection(db, item.col));
+          const select = document.getElementById(item.id);
+          if (select) {
+            select.innerHTML = '<option value="">Selecione...</option>';
+            snap.forEach(d => {
+              select.innerHTML += `<option value="${d.data().descricao}">${d.data().descricao}</option>`;
+            });
+          }
+        } catch (e) { console.error(`Erro ao carregar ${item.col}:`, e); }
+      }
+    }
 
-    renderizarTabelaFicha();
-    calcularFormacaoPrecos();
+    function iniciarInclusao() {
+      modoAcao = "incluir";
+      const form = document.getElementById("form-produto") || document.querySelector("form");
+      if (form) form.reset();
+      desbloquearFormulario();
+      gerarProximoCodigoSequencial();
+    }
 
-    document.getElementById("input-materia-prima").value = "";
-    document.getElementById("quantidade-mp").value = "";
-    document.getElementById("input-materia-prima").focus();
-}
+    function iniciarEdicao() {
+      if (!document.getElementById("codigo").value) { alert("Selecione um produto para editar."); return; }
+      modoAcao = "editar";
+      desbloquearFormulario();
+    }
 
-function removerItemFicha(index) {
-    composicaoFichaTecnica.splice(index, 1);
-    renderizarTabelaFicha();
-    calcularFormacaoPrecos();
-}
+    async function salvarOuAlterar() {
+      if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
+      const cod = String(document.getElementById("codigo").value).trim();
+      const desc = document.getElementById("descricao").value.trim();
 
-function renderizarTabelaFicha() {
-    const tbody = document.querySelector("#tabela-ficha-tecnica tbody");
-    tbody.innerHTML = "";
+      if (!desc) { alert("Preencha a Descrição do produto."); return; }
 
-    composicaoFichaTecnica.forEach((item, index) => {
+      const dadosPayload = { codigo: cod };
+      camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) dadosPayload[id] = el.value.trim();
+      });
+
+      try {
+        await setDoc(doc(db, "produtos", cod), dadosPayload);
+        alert(modoAcao === "incluir" ? "Produto cadastrado com sucesso!" : "Produto alterado com sucesso!");
+        limparTela();
+        carregarProdutos();
+      } catch (e) { console.error("Erro ao salvar produto:", e); }
+    }
+
+    async function deletarProduto() {
+      const cod = String(document.getElementById("codigo").value).trim();
+      if (!cod) { alert("Selecione um produto para deletar."); return; }
+      if (!confirm(`Deseja realmente excluir o produto código ${cod}?`)) return;
+
+      try {
+        await deleteDoc(doc(db, "produtos", cod));
+        alert("Produto deletado com sucesso!");
+        limparTela();
+        carregarProdutos();
+      } catch (e) { console.error("Erro ao deletar produto:", e); }
+    }
+
+    async function carregarProdutos() {
+      try {
+        const snap = await getDocs(collection(db, "produtos"));
+        listaProdutos = [];
+        snap.forEach(docSnap => listaProdutos.push(docSnap.data()));
+        listaProdutos.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+        renderizarTabela(listaProdutos);
+      } catch (e) { console.error("Erro ao carregar produtos:", e); }
+    }
+
+    function renderizarTabela(dados) {
+      const tbody = document.querySelector("#tabela-produtos tbody") || document.querySelector("table tbody");
+      tbody.innerHTML = "";
+      if (!dados.length) { tbody.innerHTML = '<tr><td colspan="6">Nenhum produto cadastrado.</td></tr>'; return; }
+
+      dados.forEach(prod => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td>${item.descricaoMp}</td>
-            <td>${item.quantidade}</td>
-            <td>R$ ${item.custoUnitario.toFixed(2)}</td>
-            <td>R$ ${item.subtotal.toFixed(2)}</td>
-            <td><button type="button" class="btn btn-red" onclick="removerItemFicha(${index})">Remover</button></td>
+          <td>${prod.codigo || ''}</td>
+          <td>${prod.descricao || ''}</td>
+          <td>${prod.categoria || ''}</td>
+          <td>${prod.unidade || ''}</td>
+          <td>${prod.precoVenda || '0.00'}</td>
+          <td><button type="button" class="btn-link" data-codigo="${prod.codigo}">Selecionar</button></td>
         `;
         tbody.appendChild(tr);
-    });
-}
+      });
 
-function aplicarParametrosGerais() {
-    const codParam = document.getElementById("parametro-geral").value;
-    const param = listaParametros.find(p => String(p.codigo) === String(codParam));
-
-    if (param) {
-        document.getElementById("despesas-fixas-pct").value = parseFloat(param.despesasFixasPct || 0).toFixed(2);
-        document.getElementById("tributos-pct").value = parseFloat(param.tributosPct || 0).toFixed(2);
-        document.getElementById("margem-lucro-pct").value = parseFloat(param.margemLucroPct || 0).toFixed(2);
-    } else {
-        document.getElementById("despesas-fixas-pct").value = "0.00";
-        document.getElementById("tributos-pct").value = "0.00";
-        document.getElementById("margem-lucro-pct").value = "0.00";
+      tbody.querySelectorAll(".btn-link").forEach(btn => {
+        btn.addEventListener("click", function() { selecionarProduto(this.getAttribute("data-codigo")); });
+      });
     }
 
-    calcularFormacaoPrecos();
-}
+    function selecionarProduto(codigo) {
+      const prod = listaProdutos.find(p => String(p.codigo) === String(codigo));
+      if (!prod) return;
 
-function calcularFormacaoPrecos() {
-    const custoMpTotal = composicaoFichaTecnica.reduce((acc, item) => acc + item.subtotal, 0);
-    document.getElementById("custo-mp").value = custoMpTotal.toFixed(2);
+      document.getElementById("codigo").value = prod.codigo || '';
+      camposForm.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = prod[id] || '';
+      });
 
-    const despesasPct = parseFloat(document.getElementById("despesas-fixas-pct").value) || 0;
-    const tributosPct = parseFloat(document.getElementById("tributos-pct").value) || 0;
-    const margemPct = parseFloat(document.getElementById("margem-lucro-pct").value) || 0;
-
-    const somaPorcentagens = despesasPct + tributosPct + margemPct;
-    const markupDivisor = (100 - somaPorcentagens) / 100;
-    document.getElementById("markup-divisor").value = markupDivisor.toFixed(4);
-
-    let precoVenda = 0;
-    if (markupDivisor > 0 && custoMpTotal > 0) {
-        precoVenda = custoMpTotal / markupDivisor;
-    }
-    document.getElementById("preco-venda").value = precoVenda.toFixed(2);
-
-    const despesasVal = precoVenda * (despesasPct / 100);
-    const tributosVal = precoVenda * (tributosPct / 100);
-    const margemVal = precoVenda * (margemPct / 100);
-
-    document.getElementById("despesas-fixas-val").value = despesasVal.toFixed(2);
-    document.getElementById("tributos-val").value = tributosVal.toFixed(2);
-    document.getElementById("margem-lucro-val").value = margemVal.toFixed(2);
-
-    const custoFinalTotal = custoMpTotal + despesasVal + tributosVal;
-    document.getElementById("custo-final-total").value = custoFinalTotal.toFixed(2);
-}
-
-function iniciarInclusao() {
-    modoAcao = "incluir";
-    document.getElementById("form-produto").reset();
-    composicaoFichaTecnica = [];
-    renderizarTabelaFicha();
-    desbloquearFormulario();
-
-    document.getElementById("dataCadastro").value = obterDataComUsuario();
-    document.getElementById("dataAlteracao").value = "";
-    gerarProximoCodigoSequencial();
-}
-
-function iniciarEdicao() {
-    const codigo = document.getElementById("codigo").value;
-    if (!codigo) {
-        alert("Selecione um produto da lista para editar.");
-        return;
-    }
-    modoAcao = "editar";
-    desbloquearFormulario();
-    document.getElementById("dataAlteracao").value = obterDataComUsuario();
-}
-
-function duplicarProduto() {
-    const codigoAtual = document.getElementById("codigo").value;
-    if (!codigoAtual) {
-        alert("Selecione um produto da lista para duplicar.");
-        return;
+      bloquearFormulario();
     }
 
-    modoAcao = "incluir";
-    desbloquearFormulario();
-
-    gerarProximoCodigoSequencial();
-
-    document.getElementById("dataCadastro").value = obterDataComUsuario();
-    document.getElementById("dataAlteracao").value = "";
-}
-
-function salvarOuAlterar() {
-    if (!modoAcao) {
-        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-        return;
+    function gerarProximoCodigoSequencial() {
+      if (!listaProdutos.length) { document.getElementById("codigo").value = 1; return; }
+      const nums = listaProdutos.map(p => Number(p.codigo)).filter(n => !isNaN(n));
+      document.getElementById("codigo").value = (nums.length ? Math.max(...nums) : 0) + 1;
     }
 
-    const descricao = document.getElementById("descricao").value.trim();
-    if (!descricao) {
-        alert("Preencha a Descrição do produto.");
-        return;
-    }
-
-    const payloadDados = {
-        codigo: document.getElementById("codigo").value,
-        descricao: descricao,
-        ncm: document.getElementById("ncm").value,
-        grupo: document.getElementById("grupo").value,
-        subgrupo: document.getElementById("subgrupo").value,
-        categoria: document.getElementById("categoria").value,
-        subcategoria: document.getElementById("subcategoria").value,
-        unidade: document.getElementById("unidade").value,
-        dataCadastro: document.getElementById("dataCadastro").value,
-        usuario: obterNomeUsuarioAtivo(),
-        dataAlteracao: document.getElementById("dataAlteracao").value,
-        parametroGeral: document.getElementById("parametro-geral").value,
-        custoMp: document.getElementById("custo-mp").value,
-        despesasFixasPct: document.getElementById("despesas-fixas-pct").value,
-        tributosPct: document.getElementById("tributos-pct").value,
-        margemLucroPct: document.getElementById("margem-lucro-pct").value,
-        markupDivisor: document.getElementById("markup-divisor").value,
-        precoVenda: document.getElementById("preco-venda").value,
-        custoFinalTotal: document.getElementById("custo-final-total").value,
-        fichaTecnicaJSON: JSON.stringify(composicaoFichaTecnica)
-    };
-
-    const payload = {
-        aba: "Produtos",
-        acao: "salvar",
-        dados: payloadDados
-    };
-
-    fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.status === "sucesso") {
-            alert(modoAcao === "incluir" ? "Produto cadastrado com sucesso!" : "Produto alterado com sucesso!");
-            limparTela();
-            carregarProdutos();
-        } else {
-            alert("Erro: " + res.message);
-        }
-    })
-    .catch(error => {
-        console.error("Erro ao salvar produto:", error);
-        alert("Erro ao processar a solicitação.");
-    });
-}
-
-function deletarProduto() {
-    const codigo = document.getElementById("codigo").value;
-    if (!codigo) {
-        alert("Selecione um produto da lista para deletar.");
-        return;
-    }
-
-    if (!confirm(`Deseja realmente excluir o produto código ${codigo}?`)) {
-        return;
-    }
-
-    const payload = {
-        aba: "Produtos",
-        acao: "deletar",
-        dados: { codigo: codigo }
-    };
-
-    fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.status === "sucesso") {
-            alert("Produto deletado com sucesso!");
-            limparTela();
-            carregarProdutos();
-        } else {
-            alert("Erro ao deletar: " + (res.mensagem || res.message));
-        }
-    })
-    .catch(error => {
-        console.error("Erro ao deletar produto:", error);
-        alert("Erro ao excluir o produto.");
-    });
-}
-
-function carregarProdutos() {
-    fetch(`${API_URL}?aba=Produtos`)
-        .then(r => r.json())
-        .then(dados => {
-            listaProdutos = dados;
-            renderizarTabelaProdutos(listaProdutos);
-        })
-        .catch(err => console.error("Erro ao carregar produtos:", err));
-}
-
-function renderizarTabelaProdutos(dados) {
-    const tbody = document.querySelector("#tabela-produtos tbody");
-    tbody.innerHTML = "";
-
-    if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">Nenhum produto cadastrado.</td></tr>';
-        return;
-    }
-
-    dados.forEach(prod => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${prod.codigo || ''}</td>
-            <td>${prod.descricao || ''}</td>
-            <td>${prod.grupo || ''}</td>
-            <td>${prod.categoria || ''}</td>
-            <td>${prod.unidade || ''}</td>
-            <td>R$ ${parseFloat(prod.precoVenda || 0).toFixed(2)}</td>
-            <td>
-                <button type="button" class="btn-link" onclick="selecionarProduto('${prod.codigo}')">Selecionar</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function selecionarProduto(codigo) {
-    const prod = listaProdutos.find(p => String(p.codigo) === String(codigo));
-    if (!prod) return;
-
-    document.getElementById("codigo").value = prod.codigo || '';
-    document.getElementById("descricao").value = prod.descricao || '';
-    document.getElementById("ncm").value = prod.ncm || '';
-    document.getElementById("grupo").value = prod.grupo || '';
-    document.getElementById("subgrupo").value = prod.subgrupo || '';
-    document.getElementById("categoria").value = prod.categoria || '';
-    document.getElementById("subcategoria").value = prod.subcategoria || '';
-    document.getElementById("unidade").value = prod.unidade || '';
-    document.getElementById("dataCadastro").value = prod.dataCadastro || '';
-    document.getElementById("dataAlteracao").value = prod.dataAlteracao || '';
-    document.getElementById("parametro-geral").value = prod.parametroGeral || '';
-
-    try {
-        composicaoFichaTecnica = JSON.parse(prod.fichaTecnicaJSON || '[]');
-    } catch (e) {
-        composicaoFichaTecnica = [];
-    }
-
-    renderizarTabelaFicha();
-    aplicarParametrosGerais();
-    bloquearFormulario();
-}
-
-function gerarProximoCodigoSequencial() {
-    if (!listaProdutos || listaProdutos.length === 0) {
-        document.getElementById("codigo").value = 1;
-        return;
-    }
-    const codigosNumericos = listaProdutos.map(p => Number(p.codigo)).filter(n => !isNaN(n));
-    const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-    document.getElementById("codigo").value = maiorCodigo + 1;
-}
-
-function filtrarProdutos() {
-    const termo = document.getElementById("busca").value.toLowerCase();
-    const filtrados = listaProdutos.filter(p => 
+    function filtrarProdutos() {
+      const termo = document.getElementById("busca").value.toLowerCase();
+      renderizarTabela(listaProdutos.filter(p => 
         String(p.codigo || '').toLowerCase().includes(termo) || 
         String(p.descricao || '').toLowerCase().includes(termo)
-    );
-    renderizarTabelaProdutos(filtrados);
-}
+      ));
+    }
 
-function limparTela() {
-    document.getElementById("form-produto").reset();
-    document.getElementById("codigo").value = "";
-    document.getElementById("input-materia-prima").value = "";
-    composicaoFichaTecnica = [];
-    renderizarTabelaFicha();
-    bloquearFormulario();
-}
+    function limparTela() {
+      const form = document.getElementById("form-produto") || document.querySelector("form");
+      if (form) form.reset();
+      document.getElementById("codigo").value = "";
+      bloquearFormulario();
+    }
 </script>
 
 </body>

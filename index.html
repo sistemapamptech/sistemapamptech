@@ -76,34 +76,33 @@
   </main>
   
 <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Verifica se o usuário está logado
-            const sessao = localStorage.getItem("usuarioLogado");
-            
-            if (!sessao) {
-                // Redireciona para o login se não houver sessão ativa
-                window.location.href = "login.html";
-                return;
-            }
+  document.addEventListener("DOMContentLoaded", function () {
+      // 1. Verifica se existe uma sessão ativa
+      const sessao = localStorage.getItem("usuarioLogado");
+      
+      if (!sessao) {
+          // Redireciona para o login se não estiver autenticado
+          window.location.href = "login.html";
+          return;
+      }
 
-            // Exibe o nome do usuário logado na tela (caso exista o elemento "nome-usuario")
-            const elNomeUsuario = document.getElementById("nome-usuario");
-            if (elNomeUsuario) {
-                const usuarioObj = JSON.parse(sessao);
-                elNomeUsuario.innerText = "Usuário: " + (usuarioObj.nome || usuarioObj.usuario);
-            }
+      // 2. Exibe o nome do usuário logado no topo do painel
+      const elNomeUsuario = document.getElementById("nome-usuario");
+      if (elNomeUsuario) {
+          const usuarioObj = JSON.parse(sessao);
+          elNomeUsuario.innerText = "Usuário: " + (usuarioObj.nome || usuarioObj.usuario);
+      }
 
-            // Ação do botão Sair (Logout) no menu nav
-            const btnLogout = document.getElementById("btn-logout");
-            if (btnLogout) {
-                btnLogout.addEventListener("click", function (e) {
-                    e.preventDefault(); // Impede o comportamento padrão do link <a>
-                    localStorage.removeItem("usuarioLogado");
-                    window.location.href = "login.html";
-                });
-            }
-        });  
-        
+      // 3. Ação do botão Sair (Logout)
+      const btnLogout = document.getElementById("btn-logout");
+      if (btnLogout) {
+          btnLogout.addEventListener("click", function (e) {
+              e.preventDefault();
+              localStorage.removeItem("usuarioLogado");
+              window.location.href = "login.html";
+          });
+      }
+  });  
 </script>
 
 

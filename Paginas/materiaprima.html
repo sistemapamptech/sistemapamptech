@@ -217,9 +217,23 @@
 
   </main>
 
-  <script>
-    const API_URL = "/.netlify/functions/sheets";
-    
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     let listaMateriasPrimas = [];
     let modoAcao = "";
 
@@ -231,23 +245,11 @@
 
     document.addEventListener("DOMContentLoaded", function () {
       const usuarioLogado = localStorage.getItem("usuarioLogado");
-
-      if (!usuarioLogado) {
-        window.location.href = "../login.html";
-        return;
-      }
+      if (!usuarioLogado) { window.location.href = "../login.html"; return; }
 
       const userObj = JSON.parse(usuarioLogado);
-      
-      const elementNomeUser = document.getElementById("nome-usuario");
-      if (elementNomeUser) {
-        elementNomeUser.textContent = userObj.nome;
-      }
-
-      const campoUsuario = document.getElementById("usuarioResponsavel");
-      if (campoUsuario) {
-        campoUsuario.value = userObj.nome;
-      }
+      if (document.getElementById("nome-usuario")) document.getElementById("nome-usuario").textContent = userObj.nome;
+      if (document.getElementById("usuarioResponsavel")) document.getElementById("usuarioResponsavel").value = userObj.nome;
 
       const btnLogout = document.getElementById("btn-logout");
       if (btnLogout) {
@@ -266,26 +268,19 @@
       document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
       document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
       document.getElementById("btn-deletar").addEventListener("click", deletarMateriaPrima);
-      
       document.getElementById("busca").addEventListener("input", filtrarMateriasPrimas);
       document.getElementById("btn-buscar").addEventListener("click", filtrarMateriasPrimas);
 
       const checkboxesOrigem = document.querySelectorAll('.chk-origem');
       checkboxesOrigem.forEach(chk => {
         chk.addEventListener('change', function() {
-          if (this.checked) {
-            checkboxesOrigem.forEach(c => { if (c !== this) c.checked = false; });
-          }
+          if (this.checked) checkboxesOrigem.forEach(c => { if (c !== this) c.checked = false; });
         });
       });
     });
 
     function bloquearFormulario() {
-      camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = true;
-      });
-
+      camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
       document.querySelectorAll('.chk-origem').forEach(chk => chk.disabled = true);
       modoAcao = "";
     }
@@ -293,11 +288,8 @@
     function desbloquearFormulario() {
       camposForm.forEach(id => {
         const el = document.getElementById(id);
-        if (el && id !== "dataCadastro" && id !== "dataAlteracao" && id !== "usuarioResponsavel") {
-          el.disabled = false;
-        }
+        if (el && id !== "dataCadastro" && id !== "dataAlteracao" && id !== "usuarioResponsavel") el.disabled = false;
       });
-
       document.querySelectorAll('.chk-origem').forEach(chk => chk.disabled = false);
       document.getElementById("descricao").focus();
     }
@@ -313,165 +305,93 @@
       });
     }
 
-    function obterDataHoraAtual() {
-      const agora = new Date();
-      return agora.toLocaleString('pt-BR');
-    }
-
-    function carregarCombos() {
+    async function carregarCombos() {
       const tabelasCombos = [
-        { id: "grupo", aba: "Grupos" },
-        { id: "subgrupo", aba: "Subgrupos" },
-        { id: "categoria", aba: "Categorias" },
-        { id: "subcategoria", aba: "Subcategorias" }
+        { id: "grupo", col: "grupos" },
+        { id: "subgrupo", col: "subgrupos" },
+        { id: "categoria", col: "categorias" },
+        { id: "subcategoria", col: "subcategorias" }
       ];
 
-      tabelasCombos.forEach(item => {
-        fetch(`${API_URL}?aba=${item.aba}`)
-          .then(r => r.json())
-          .then(dados => {
-            const select = document.getElementById(item.id);
-            select.innerHTML = '<option value="">Selecione...</option>';
-            dados.forEach(d => {
-              select.innerHTML += `<option value="${d.descricao}">${d.descricao}</option>`;
-            });
-          })
-          .catch(err => console.error(`Erro ao carregar ${item.aba}:`, err));
-      });
+      for (const item of tabelasCombos) {
+        try {
+          const snap = await getDocs(collection(db, item.col));
+          const select = document.getElementById(item.id);
+          select.innerHTML = '<option value="">Selecione...</option>';
+          snap.forEach(d => {
+            select.innerHTML += `<option value="${d.data().descricao}">${d.data().descricao}</option>`;
+          });
+        } catch (e) { console.error(`Erro ao carregar ${item.col}:`, e); }
+      }
     }
 
     function iniciarInclusao() {
       modoAcao = "incluir";
       document.getElementById("form-materia-prima").reset();
       desbloquearFormulario();
-      
       definirOrigemSelecionada('Nacional');
-      document.getElementById("dataCadastro").value = obterDataHoraAtual();
+      document.getElementById("dataCadastro").value = new Date().toLocaleString('pt-BR');
       document.getElementById("dataAlteracao").value = "";
       
-      const usuarioLogado = localStorage.getItem("usuarioLogado");
-      if (usuarioLogado) {
-        document.getElementById("usuarioResponsavel").value = JSON.parse(usuarioLogado).nome;
-      }
-
+      const user = localStorage.getItem("usuarioLogado");
+      if (user) document.getElementById("usuarioResponsavel").value = JSON.parse(user).nome;
       gerarProximoCodigoSequencial();
     }
 
     function iniciarEdicao() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione uma matéria-prima da lista para editar.");
-        return;
-      }
+      if (!document.getElementById("codigo").value) { alert("Selecione uma matéria-prima para editar."); return; }
       modoAcao = "editar";
       desbloquearFormulario();
-      document.getElementById("dataAlteracao").value = obterDataHoraAtual();
+      document.getElementById("dataAlteracao").value = new Date().toLocaleString('pt-BR');
     }
 
-    function salvarOuAlterar() {
-      if (!modoAcao) {
-        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-        return;
-      }
+    async function salvarOuAlterar() {
+      if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
+      const cod = String(document.getElementById("codigo").value).trim();
+      const desc = document.getElementById("descricao").value.trim();
+      if (!desc) { alert("Preencha a Descrição."); return; }
 
-      const descricao = document.getElementById("descricao").value.trim();
-
-      if (!descricao) {
-        alert("Preencha o campo Descrição.");
-        return;
-      }
-
-      const dadosPayload = { codigo: document.getElementById("codigo").value };
+      const dadosPayload = { codigo: cod, origem: obterOrigemSelecionada() };
       camposForm.forEach(id => {
         const el = document.getElementById(id);
         dadosPayload[id] = el ? el.value.trim() : "";
       });
 
-      dadosPayload["origem"] = obterOrigemSelecionada();
-
-      const payload = {
-        aba: "MateriasPrimas",
-        acao: "salvar",
-        dados: dadosPayload
-      };
-
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "sucesso") {
-          alert(modoAcao === "incluir" ? "Matéria-prima cadastrada com sucesso!" : "Matéria-prima alterada com sucesso!");
-          limparTela();
-          carregarMateriasPrimas();
-        } else {
-          alert("Erro: " + res.message);
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao salvar matéria-prima:", error);
-        alert("Erro ao processar a solicitação.");
-      });
+      try {
+        await setDoc(doc(db, "materiasprimas", cod), dadosPayload);
+        alert(modoAcao === "incluir" ? "Matéria-prima cadastrada com sucesso!" : "Matéria-prima alterada com sucesso!");
+        limparTela();
+        carregarMateriasPrimas();
+      } catch (e) { console.error("Erro ao salvar matéria-prima:", e); }
     }
 
-    function deletarMateriaPrima() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione uma matéria-prima da lista para deletar.");
-        return;
-      }
+    async function deletarMateriaPrima() {
+      const cod = String(document.getElementById("codigo").value).trim();
+      if (!cod) { alert("Selecione uma matéria-prima para deletar."); return; }
+      if (!confirm(`Deseja realmente excluir a matéria-prima código ${cod}?`)) return;
 
-      if (!confirm(`Deseja realmente excluir a matéria-prima código ${codigo}?`)) {
-        return;
-      }
-
-      const payload = {
-        aba: "MateriasPrimas",
-        acao: "deletar",
-        dados: { codigo: codigo }
-      };
-
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "sucesso") {
-          alert("Matéria-prima deletada com sucesso!");
-          limparTela();
-          carregarMateriasPrimas();
-        } else {
-          alert("Erro ao deletar: " + (res.mensagem || res.message));
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao deletar matéria-prima:", error);
-        alert("Erro ao excluir a matéria-prima.");
-      });
+      try {
+        await deleteDoc(doc(db, "materiasprimas", cod));
+        alert("Matéria-prima deletada com sucesso!");
+        limparTela();
+        carregarMateriasPrimas();
+      } catch (e) { console.error("Erro ao deletar matéria-prima:", e); }
     }
 
-    function carregarMateriasPrimas() {
-      fetch(`${API_URL}?aba=MateriasPrimas`)
-        .then(r => r.json())
-        .then(dados => {
-          listaMateriasPrimas = dados;
-          renderizarTabela(listaMateriasPrimas);
-        })
-        .catch(err => console.error("Erro ao carregar matérias-primas:", err));
+    async function carregarMateriasPrimas() {
+      try {
+        const snap = await getDocs(collection(db, "materiasprimas"));
+        listaMateriasPrimas = [];
+        snap.forEach(docSnap => listaMateriasPrimas.push(docSnap.data()));
+        listaMateriasPrimas.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+        renderizarTabela(listaMateriasPrimas);
+      } catch (e) { console.error("Erro ao carregar matérias-primas:", e); }
     }
 
     function renderizarTabela(dados) {
       const tbody = document.querySelector("#tabela-materia-prima tbody");
       tbody.innerHTML = "";
-
-      if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">Nenhuma matéria-prima cadastrada.</td></tr>';
-        return;
-      }
+      if (!dados.length) { tbody.innerHTML = '<tr><td colspan="6">Nenhuma matéria-prima cadastrada.</td></tr>'; return; }
 
       dados.forEach(mat => {
         const tr = document.createElement("tr");
@@ -481,11 +401,13 @@
           <td>${mat.unidadeMedida || ''}</td>
           <td>${mat.valorUnitario || ''}</td>
           <td>${mat.origem || ''}</td>
-          <td>
-            <button type="button" class="btn-link" onclick="selecionarMateriaPrima('${mat.codigo}')">Selecionar</button>
-          </td>
+          <td><button type="button" class="btn-link" data-codigo="${mat.codigo}">Selecionar</button></td>
         `;
         tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll(".btn-link").forEach(btn => {
+        btn.addEventListener("click", function() { selecionarMateriaPrima(this.getAttribute("data-codigo")); });
       });
     }
 
@@ -504,22 +426,17 @@
     }
 
     function gerarProximoCodigoSequencial() {
-      if (!listaMateriasPrimas || listaMateriasPrimas.length === 0) {
-        document.getElementById("codigo").value = 1;
-        return;
-      }
-      const codigosNumericos = listaMateriasPrimas.map(m => Number(m.codigo)).filter(n => !isNaN(n));
-      const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-      document.getElementById("codigo").value = maiorCodigo + 1;
+      if (!listaMateriasPrimas.length) { document.getElementById("codigo").value = 1; return; }
+      const nums = listaMateriasPrimas.map(m => Number(m.codigo)).filter(n => !isNaN(n));
+      document.getElementById("codigo").value = (nums.length ? Math.max(...nums) : 0) + 1;
     }
 
     function filtrarMateriasPrimas() {
       const termo = document.getElementById("busca").value.toLowerCase();
-      const filtrados = listaMateriasPrimas.filter(m => 
+      renderizarTabela(listaMateriasPrimas.filter(m => 
         String(m.codigo || '').toLowerCase().includes(termo) || 
         String(m.descricao || '').toLowerCase().includes(termo)
-      );
-      renderizarTabela(filtrados);
+      ));
     }
 
     function limparTela() {
@@ -528,7 +445,7 @@
       document.querySelectorAll('.chk-origem').forEach(chk => chk.checked = false);
       bloquearFormulario();
     }
-  </script>
+</script>
 
 </body>
 </html>

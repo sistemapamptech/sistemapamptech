@@ -164,8 +164,22 @@
 
   </main>
 
-  <script>
-    const API_URL = "/.netlify/functions/sheets";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     let listaParametros = [];
     let modoAcao = "";
@@ -177,18 +191,11 @@
 
     document.addEventListener("DOMContentLoaded", function () {
       const usuarioLogado = localStorage.getItem("usuarioLogado");
-      if (!usuarioLogado) {
-        window.location.href = "../login.html";
-        return;
-      }
+      if (!usuarioLogado) { window.location.href = "../login.html"; return; }
 
       const userObj = JSON.parse(usuarioLogado);
-      
-      const elNomeUsuario = document.getElementById("nome-usuario");
-      if (elNomeUsuario) elNomeUsuario.textContent = userObj.nome || userObj.usuario;
-
-      const campoUsuario = document.getElementById("usuario");
-      if (campoUsuario) campoUsuario.value = userObj.nome || userObj.usuario;
+      if (document.getElementById("nome-usuario")) document.getElementById("nome-usuario").textContent = userObj.nome || userObj.usuario;
+      if (document.getElementById("usuario")) document.getElementById("usuario").value = userObj.nome || userObj.usuario;
 
       const btnLogout = document.getElementById("btn-logout");
       if (btnLogout) {
@@ -207,184 +214,100 @@
       document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
       document.getElementById("btn-deletar").addEventListener("click", deletarParametro);
       document.getElementById("btn-duplicar").addEventListener("click", duplicarParametro);
-      
-      const inputBusca = document.getElementById("busca");
-      if (inputBusca) inputBusca.addEventListener("input", filtrarParametros);
-      
-      const btnBuscar = document.getElementById("btn-buscar");
-      if (btnBuscar) btnBuscar.addEventListener("click", filtrarParametros);
+      document.getElementById("busca").addEventListener("input", filtrarParametros);
+      document.getElementById("btn-buscar").addEventListener("click", filtrarParametros);
     });
 
     function bloquearFormulario() {
-      camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = true;
-      });
+      camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
       modoAcao = "";
     }
 
     function desbloquearFormulario() {
       camposForm.forEach(id => {
         const el = document.getElementById(id);
-        if (el && id !== "dataCadastro" && id !== "dataAlteracao" && id !== "usuario") {
-          el.disabled = false;
-        }
+        if (el && id !== "dataCadastro" && id !== "dataAlteracao" && id !== "usuario") el.disabled = false;
       });
       document.getElementById("descricao").focus();
-    }
-
-    function obterDataHoraAtual() {
-      return new Date().toLocaleString('pt-BR');
     }
 
     function iniciarInclusao() {
       modoAcao = "incluir";
       document.getElementById("form-parametro").reset();
       
-      const usuarioLogado = localStorage.getItem("usuarioLogado");
-      if (usuarioLogado) {
-        const userObj = JSON.parse(usuarioLogado);
-        document.getElementById("usuario").value = userObj.nome || userObj.usuario;
-      }
+      const user = localStorage.getItem("usuarioLogado");
+      if (user) document.getElementById("usuario").value = JSON.parse(user).nome || JSON.parse(user).usuario;
 
       desbloquearFormulario();
-      document.getElementById("dataCadastro").value = obterDataHoraAtual();
+      document.getElementById("dataCadastro").value = new Date().toLocaleString('pt-BR');
       document.getElementById("dataAlteracao").value = "";
       gerarProximoCodigoSequencial();
     }
 
     function iniciarEdicao() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione um parâmetro da lista para editar.");
-        return;
-      }
+      if (!document.getElementById("codigo").value) { alert("Selecione um parâmetro para editar."); return; }
       modoAcao = "editar";
       desbloquearFormulario();
-      document.getElementById("dataAlteracao").value = obterDataHoraAtual();
+      document.getElementById("dataAlteracao").value = new Date().toLocaleString('pt-BR');
     }
 
     function duplicarParametro() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione um parâmetro da lista para duplicar.");
-        return;
-      }
-      
+      if (!document.getElementById("codigo").value) { alert("Selecione um parâmetro para duplicar."); return; }
       modoAcao = "incluir";
       desbloquearFormulario();
-      
       gerarProximoCodigoSequencial();
       document.getElementById("descricao").value += " (Cópia)";
-      document.getElementById("dataCadastro").value = obterDataHoraAtual();
+      document.getElementById("dataCadastro").value = new Date().toLocaleString('pt-BR');
       document.getElementById("dataAlteracao").value = "";
     }
 
-    function salvarOuAlterar() {
-      if (!modoAcao) {
-        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-        return;
-      }
+    async function salvarOuAlterar() {
+      if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
+      const cod = String(document.getElementById("codigo").value).trim();
+      const desc = document.getElementById("descricao").value.trim();
+      if (!desc) { alert("Preencha a Descrição do parâmetro."); return; }
 
-      const descricao = document.getElementById("descricao").value.trim();
-      if (!descricao) {
-        alert("Preencha a Descrição do parâmetro.");
-        return;
-      }
-
-      const dadosPayload = { codigo: document.getElementById("codigo").value };
+      const dadosPayload = { codigo: cod };
       camposForm.forEach(id => {
         const el = document.getElementById(id);
         if (el) dadosPayload[id] = el.value.trim();
       });
 
-      const payload = {
-        aba: "ParametrosGerais",
-        acao: "salvar",
-        dados: dadosPayload
-      };
-
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "sucesso") {
-          alert(modoAcao === "incluir" ? "Parâmetro cadastrado com sucesso!" : "Parâmetro alterado com sucesso!");
-          limparTela();
-          carregarParametros();
-        } else {
-          alert("Erro: " + (res.mensagem || res.message));
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao salvar parâmetro:", error);
-        alert("Erro ao processar a solicitação.");
-      });
+      try {
+        await setDoc(doc(db, "parametros", cod), dadosPayload);
+        alert(modoAcao === "incluir" ? "Parâmetro cadastrado com sucesso!" : "Parâmetro alterado com sucesso!");
+        limparTela();
+        carregarParametros();
+      } catch (e) { console.error("Erro ao salvar parâmetro:", e); }
     }
 
-    function deletarParametro() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione um parâmetro da lista para deletar.");
-        return;
-      }
+    async function deletarParametro() {
+      const cod = String(document.getElementById("codigo").value).trim();
+      if (!cod) { alert("Selecione um parâmetro para deletar."); return; }
+      if (!confirm(`Deseja realmente excluir o parâmetro código ${cod}?`)) return;
 
-      if (!confirm(`Deseja realmente excluir o parâmetro código ${codigo}?`)) {
-        return;
-      }
-
-      const payload = {
-        aba: "ParametrosGerais",
-        acao: "deletar",
-        dados: { codigo: codigo }
-      };
-
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "sucesso") {
-          alert("Parâmetro deletado com sucesso!");
-          limparTela();
-          carregarParametros();
-        } else {
-          alert("Erro ao deletar: " + (res.mensagem || res.message));
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao deletar parâmetro:", error);
-        alert("Erro ao excluir o parâmetro.");
-      });
+      try {
+        await deleteDoc(doc(db, "parametros", cod));
+        alert("Parâmetro deletado com sucesso!");
+        limparTela();
+        carregarParametros();
+      } catch (e) { console.error("Erro ao deletar parâmetro:", e); }
     }
 
-    function carregarParametros() {
-      fetch(`${API_URL}?aba=ParametrosGerais`)
-        .then(r => r.json())
-        .then(dados => {
-          listaParametros = Array.isArray(dados) ? dados : [];
-          renderizarTabela(listaParametros);
-        })
-        .catch(err => {
-          console.error("Erro ao carregar parâmetros:", err);
-          const tbody = document.querySelector("#tabela-parametros tbody");
-          tbody.innerHTML = '<tr><td colspan="6">Erro ao carregar os parâmetros.</td></tr>';
-        });
+    async function carregarParametros() {
+      try {
+        const snap = await getDocs(collection(db, "parametros"));
+        listaParametros = [];
+        snap.forEach(docSnap => listaParametros.push(docSnap.data()));
+        listaParametros.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+        renderizarTabela(listaParametros);
+      } catch (e) { console.error("Erro ao carregar parâmetros:", e); }
     }
 
     function renderizarTabela(dados) {
       const tbody = document.querySelector("#tabela-parametros tbody");
       tbody.innerHTML = "";
-
-      if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">Nenhum parâmetro cadastrado.</td></tr>';
-        return;
-      }
+      if (!dados.length) { tbody.innerHTML = '<tr><td colspan="6">Nenhum parâmetro cadastrado.</td></tr>'; return; }
 
       dados.forEach(par => {
         const tr = document.createElement("tr");
@@ -394,11 +317,13 @@
           <td>${parseFloat(par.despesasFixasPct || 0).toFixed(2)}%</td>
           <td>${parseFloat(par.tributosPct || 0).toFixed(2)}%</td>
           <td>${parseFloat(par.margemLucroPct || 0).toFixed(2)}%</td>
-          <td>
-            <button type="button" class="btn-link" onclick="selecionarParametro('${par.codigo}')">Selecionar</button>
-          </td>
+          <td><button type="button" class="btn-link" data-codigo="${par.codigo}">Selecionar</button></td>
         `;
         tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll(".btn-link").forEach(btn => {
+        btn.addEventListener("click", function() { selecionarParametro(this.getAttribute("data-codigo")); });
       });
     }
 
@@ -416,25 +341,17 @@
     }
 
     function gerarProximoCodigoSequencial() {
-      if (listaParametros.length === 0) {
-        document.getElementById("codigo").value = 1;
-        return;
-      }
-      const codigosNumericos = listaParametros.map(p => Number(p.codigo)).filter(n => !isNaN(n));
-      const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-      document.getElementById("codigo").value = maiorCodigo + 1;
+      if (!listaParametros.length) { document.getElementById("codigo").value = 1; return; }
+      const nums = listaParametros.map(p => Number(p.codigo)).filter(n => !isNaN(n));
+      document.getElementById("codigo").value = (nums.length ? Math.max(...nums) : 0) + 1;
     }
 
     function filtrarParametros() {
-      const elBusca = document.getElementById("busca");
-      if (!elBusca) return;
-      
-      const termo = elBusca.value.toLowerCase();
-      const filtrados = listaParametros.filter(p => 
+      const termo = document.getElementById("busca").value.toLowerCase();
+      renderizarTabela(listaParametros.filter(p => 
         String(p.codigo || '').toLowerCase().includes(termo) || 
         String(p.descricao || '').toLowerCase().includes(termo)
-      );
-      renderizarTabela(filtrados);
+      ));
     }
 
     function limparTela() {
@@ -442,6 +359,6 @@
       document.getElementById("codigo").value = "";
       bloquearFormulario();
     }
-  </script>
+</script>
 </body>
 </html>

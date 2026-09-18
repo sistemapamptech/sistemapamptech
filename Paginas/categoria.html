@@ -6,6 +6,7 @@
   <title>Dashboard - Cadastro de Categoria</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://kit.fontawesome.com/4866ffbdb2.js" crossorigin="anonymous"></script>
+  <script type="module" src="../firebase-config.js"></script>
 </head>
 <body>
 
@@ -130,9 +131,34 @@
 
   </main>
 
-  <script>
-    const API_URL = "/.netlify/functions/sheets";
-    
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      getDocs, 
+      doc, 
+      setDoc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 1. Configuração do seu Projeto no Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    // 2. Inicializa o Firebase e o Firestore
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Variáveis de escopo
     let listaCategorias = [];
     let modoAcao = "";
 
@@ -203,7 +229,8 @@
         desbloquearFormulario();
     }
 
-    function salvarOuAlterar() {
+    // SALVAR / ALTERAR (Utilizando setDoc do Firestore)
+    async function salvarOuAlterar() {
         if (!modoAcao) {
             alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
             return;
@@ -216,43 +243,28 @@
             return;
         }
 
-        const codigoVal = document.getElementById("codigo").value;
+        const codigoVal = String(document.getElementById("codigo").value).trim();
         const descricaoVal = descricaoInput.value.trim();
 
-        const payload = {
-            aba: "Categorias",
-            acao: "salvar",
-            dados: {
+        try {
+            // Grava no Firestore usando o código da categoria como ID do Documento
+            await setDoc(doc(db, "categorias", codigoVal), {
                 codigo: codigoVal,
                 descricao: descricaoVal
-            }
-        };
+            });
 
-        fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === "sucesso") {
-                alert(modoAcao === "incluir" ? "Categoria cadastrada com sucesso!" : "Categoria alterada com sucesso!");
-                limparTela();
-                carregarCategorias();
-            } else {
-                alert("Erro: " + res.message);
-            }
-        })
-        .catch(error => {
-            console.error("Erro ao salvar categoria:", error);
+            alert(modoAcao === "incluir" ? "Categoria cadastrada com sucesso!" : "Categoria alterada com sucesso!");
+            limparTela();
+            carregarCategorias();
+        } catch (error) {
+            console.error("Erro ao salvar categoria no Firestore:", error);
             alert("Erro ao processar a solicitação.");
-        });
+        }
     }
 
-    function deletarCategoria() {
-        const codigo = document.getElementById("codigo").value;
+    // DELETAR (Utilizando deleteDoc do Firestore)
+    async function deletarCategoria() {
+        const codigo = String(document.getElementById("codigo").value).trim();
         if (!codigo) {
             alert("Selecione uma categoria da lista para deletar.");
             return;
@@ -262,47 +274,36 @@
             return;
         }
 
-        const payload = {
-            aba: "Categorias",
-            acao: "deletar",
-            dados: { 
-                codigo: codigo 
-            }
-        };
+        try {
+            // Deleta o documento direto pelo ID
+            await deleteDoc(doc(db, "categorias", codigo));
 
-        fetch(API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === "sucesso") {
-                alert("Categoria deletada com sucesso!");
-                limparTela();
-                carregarCategorias();
-            } else {
-                alert("Erro ao deletar: " + (res.mensagem || res.message));
-            }
-        })
-        .catch(error => {
-            console.error("Erro ao deletar categoria:", error);
+            alert("Categoria deletada com sucesso!");
+            limparTela();
+            carregarCategorias();
+        } catch (error) {
+            console.error("Erro ao deletar categoria no Firestore:", error);
             alert("Erro ao excluir a categoria.");
-        });
+        }
     }
 
-    function carregarCategorias() {
-        fetch(`${API_URL}?aba=Categorias`)
-            .then(response => response.json())
-            .then(dados => {
-                listaCategorias = dados;
-                renderizarTabela(listaCategorias);
-            })
-            .catch(error => {
-                console.error("Erro ao carregar categorias:", error);
+    // BUSCAR DADOS (Utilizando getDocs do Firestore)
+    async function carregarCategorias() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "categorias"));
+            listaCategorias = [];
+            
+            querySnapshot.forEach((docSnap) => {
+                listaCategorias.push(docSnap.data());
             });
+
+            // Ordena os resultados por código de forma numérica
+            listaCategorias.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+
+            renderizarTabela(listaCategorias);
+        } catch (error) {
+            console.error("Erro ao carregar categorias do Firestore:", error);
+        }
     }
 
     function renderizarTabela(dados) {
@@ -320,10 +321,19 @@
                 <td>${cat.codigo || ''}</td>
                 <td>${cat.descricao || ''}</td>
                 <td>
-                    <button type="button" class="btn-link" onclick="selecionarCategoria('${cat.codigo}', '${cat.descricao}')">Selecionar</button>
+                    <button type="button" class="btn-link" data-codigo="${cat.codigo}" data-descricao="${cat.descricao}">Selecionar</button>
                 </td>
             `;
             tbody.appendChild(tr);
+        });
+
+        // Evento de clique no botão "Selecionar" da tabela
+        tbody.querySelectorAll(".btn-link").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const cod = this.getAttribute("data-codigo");
+                const desc = this.getAttribute("data-descricao");
+                selecionarCategoria(cod, desc);
+            });
         });
     }
 
@@ -358,7 +368,8 @@
         document.getElementById("codigo").value = "";
         bloquearFormulario();
     }
-  </script>
+</script>
+
 
 </body>
 </html>

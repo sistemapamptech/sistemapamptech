@@ -243,25 +243,34 @@
 
   </main>
 
-  <script>
-    const API_URL = "/.netlify/functions/sheets";
-    
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     let listaFornecedores = [];
     let modoAcao = "";
 
     const camposForm = [
-      "razaoSocial", "tipoPessoa", "cnpjCpf", "ie", "im",
-      "cep", "endereco", "numero", "complemento", "bairro", "municipio", "uf",
-      "comprador", "celular", "telefone", "ramal", "email", "grupo", "subgrupo"
+      "razaoSocial", "tipoPessoa", "cnpjCpf", "ie", "im", "cep", "endereco", "numero",
+      "complemento", "bairro", "municipio", "uf", "comprador", "celular", "telefone", "ramal", "email", "grupo", "subgrupo"
     ];
 
     document.addEventListener("DOMContentLoaded", function () {
       const usuarioLogado = localStorage.getItem("usuarioLogado");
-
-      if (!usuarioLogado) {
-        window.location.href = "../login.html";
-        return;
-      }
+      if (!usuarioLogado) { window.location.href = "../login.html"; return; }
 
       const userObj = JSON.parse(usuarioLogado);
       const elNomeUsuario = document.getElementById("nome-usuario");
@@ -288,12 +297,8 @@
       const btnDuplicar = document.getElementById("btn-duplicar");
       if (btnDuplicar) btnDuplicar.addEventListener("click", duplicarFornecedor);
       
-      const inputBusca = document.getElementById("busca");
-      if (inputBusca) inputBusca.addEventListener("input", filtrarFornecedores);
-      
-      const btnBuscar = document.getElementById("btn-buscar");
-      if (btnBuscar) btnBuscar.addEventListener("click", filtrarFornecedores);
-
+      document.getElementById("busca").addEventListener("input", filtrarFornecedores);
+      document.getElementById("btn-buscar").addEventListener("click", filtrarFornecedores);
       document.getElementById("tipoPessoa").addEventListener("change", atualizarLabelCnpjCpf);
       document.getElementById("cep").addEventListener("blur", buscarCep);
 
@@ -308,29 +313,19 @@
     });
 
     function bloquearFormulario() {
-      camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = true;
-      });
-
+      camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
       document.querySelectorAll('.chk-situacao').forEach(chk => chk.disabled = true);
       modoAcao = "";
     }
 
     function desbloquearFormulario() {
-      camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = false;
-      });
-
+      camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
       document.querySelectorAll('.chk-situacao').forEach(chk => chk.disabled = false);
       document.getElementById("razaoSocial").focus();
     }
 
     function atualizarLabelCnpjCpf() {
-      const tipo = document.getElementById("tipoPessoa").value;
-      const lbl = document.getElementById("lbl-cnpjCpf");
-      lbl.textContent = tipo === "fisica" ? "CPF:" : "CNPJ:";
+      document.getElementById("lbl-cnpjCpf").textContent = document.getElementById("tipoPessoa").value === "fisica" ? "CPF:" : "CNPJ:";
     }
 
     function obterSituacaoSelecionada() {
@@ -357,197 +352,115 @@
               document.getElementById("uf").value = data.uf || "";
               document.getElementById("numero").focus();
             }
-          })
-          .catch(err => console.error("Erro ao buscar CEP:", err));
+          });
       }
     }
 
-    function carregarCombos() {
-      fetch(`${API_URL}?aba=Grupos`)
-        .then(r => r.json())
-        .then(dados => {
-          const select = document.getElementById("grupo");
-          select.innerHTML = '<option value="">Selecione...</option>';
-          if (Array.isArray(dados)) {
-            dados.forEach(item => {
-              select.innerHTML += `<option value="${item.descricao}">${item.descricao}</option>`;
-            });
-          }
-        })
-        .catch(err => console.error("Erro ao carregar grupos:", err));
+    async function carregarCombos() {
+      try {
+        const snapGrupos = await getDocs(collection(db, "grupos"));
+        const selectG = document.getElementById("grupo");
+        selectG.innerHTML = '<option value="">Selecione...</option>';
+        snapGrupos.forEach(docSnap => {
+          selectG.innerHTML += `<option value="${docSnap.data().descricao}">${docSnap.data().descricao}</option>`;
+        });
 
-      fetch(`${API_URL}?aba=Subgrupos`)
-        .then(r => r.json())
-        .then(dados => {
-          const select = document.getElementById("subgrupo");
-          select.innerHTML = '<option value="">Selecione...</option>';
-          if (Array.isArray(dados)) {
-            dados.forEach(item => {
-              select.innerHTML += `<option value="${item.descricao}">${item.descricao}</option>`;
-            });
-          }
-        })
-        .catch(err => console.error("Erro ao carregar subgrupos:", err));
+        const snapSub = await getDocs(collection(db, "subgrupos"));
+        const selectSub = document.getElementById("subgrupo");
+        selectSub.innerHTML = '<option value="">Selecione...</option>';
+        snapSub.forEach(docSnap => {
+          selectSub.innerHTML += `<option value="${docSnap.data().descricao}">${docSnap.data().descricao}</option>`;
+        });
+      } catch (e) { console.error("Erro ao carregar combos:", e); }
     }
 
     function iniciarInclusao() {
       modoAcao = "incluir";
       document.getElementById("form-fornecedor").reset();
       desbloquearFormulario();
-      
       definirSituacaoSelecionada('Ativa');
       atualizarLabelCnpjCpf();
       gerarProximoCodigoSequencial();
     }
 
     function iniciarEdicao() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione um fornecedor da lista para editar.");
-        return;
-      }
+      if (!document.getElementById("codigo").value) { alert("Selecione um fornecedor para editar."); return; }
       modoAcao = "editar";
       desbloquearFormulario();
     }
 
     function duplicarFornecedor() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione um fornecedor da lista para duplicar.");
-        return;
-      }
-
+      if (!document.getElementById("codigo").value) { alert("Selecione um fornecedor para duplicar."); return; }
       modoAcao = "incluir";
       desbloquearFormulario();
-      
       gerarProximoCodigoSequencial();
       document.getElementById("razaoSocial").value += " (Cópia)";
     }
 
-    function salvarOuAlterar() {
-      if (!modoAcao) {
-        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-        return;
-      }
+    async function salvarOuAlterar() {
+      if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
 
-      const razaoSocial = document.getElementById("razaoSocial").value.trim();
-      const cnpjCpf = document.getElementById("cnpjCpf").value.trim();
+      const cod = String(document.getElementById("codigo").value).trim();
+      const razao = document.getElementById("razaoSocial").value.trim();
+      if (!razao) { alert("Preencha a Razão Social."); return; }
 
-      if (!razaoSocial || !cnpjCpf) {
-        alert("Preencha a Razão Social e o CNPJ/CPF.");
-        return;
-      }
-
-      const dadosPayload = { codigo: document.getElementById("codigo").value };
+      const dadosPayload = { codigo: cod, situacao: obterSituacaoSelecionada() };
       camposForm.forEach(id => {
         const el = document.getElementById(id);
         if (el) dadosPayload[id] = el.value.trim();
       });
 
-      dadosPayload["situacao"] = obterSituacaoSelecionada();
-
-      const payload = {
-        aba: "Fornecedores",
-        acao: "salvar",
-        dados: dadosPayload
-      };
-
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "sucesso") {
-          alert(modoAcao === "incluir" ? "Fornecedor cadastrado com sucesso!" : "Fornecedor alterado com sucesso!");
-          limparTela();
-          carregarFornecedores();
-        } else {
-          alert("Erro: " + (res.mensagem || res.message));
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao salvar fornecedor:", error);
-        alert("Erro ao processar a solicitação.");
-      });
+      try {
+        await setDoc(doc(db, "fornecedores", cod), dadosPayload);
+        alert(modoAcao === "incluir" ? "Fornecedor cadastrado com sucesso!" : "Fornecedor alterado com sucesso!");
+        limparTela();
+        carregarFornecedores();
+      } catch (e) { console.error("Erro ao salvar fornecedor:", e); }
     }
 
-    function deletarFornecedor() {
-      const codigo = document.getElementById("codigo").value;
-      if (!codigo) {
-        alert("Selecione um fornecedor da lista para deletar.");
-        return;
-      }
+    async function deletarFornecedor() {
+      const cod = String(document.getElementById("codigo").value).trim();
+      if (!cod) { alert("Selecione um fornecedor para deletar."); return; }
+      if (!confirm(`Deseja realmente excluir o fornecedor código ${cod}?`)) return;
 
-      if (!confirm(`Deseja realmente excluir o fornecedor código ${codigo}?`)) {
-        return;
-      }
-
-      const payload = {
-        aba: "Fornecedores",
-        acao: "deletar",
-        dados: { codigo: codigo }
-      };
-
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === "sucesso") {
-          alert("Fornecedor deletado com sucesso!");
-          limparTela();
-          carregarFornecedores();
-        } else {
-          alert("Erro ao deletar: " + (res.mensagem || res.message));
-        }
-      })
-      .catch(error => {
-        console.error("Erro ao deletar fornecedor:", error);
-        alert("Erro ao excluir o fornecedor.");
-      });
+      try {
+        await deleteDoc(doc(db, "fornecedores", cod));
+        alert("Fornecedor deletado com sucesso!");
+        limparTela();
+        carregarFornecedores();
+      } catch (e) { console.error("Erro ao deletar fornecedor:", e); }
     }
 
-    function carregarFornecedores() {
-      fetch(`${API_URL}?aba=Fornecedores`)
-        .then(r => r.json())
-        .then(dados => {
-          listaFornecedores = Array.isArray(dados) ? dados : [];
-          renderizarTabela(listaFornecedores);
-        })
-        .catch(err => {
-          console.error("Erro ao carregar fornecedores:", err);
-          const tbody = document.querySelector("#tabela-fornecedores tbody");
-          tbody.innerHTML = '<tr><td colspan="6">Erro ao carregar os fornecedores.</td></tr>';
-        });
+    async function carregarFornecedores() {
+      try {
+        const snap = await getDocs(collection(db, "fornecedores"));
+        listaFornecedores = [];
+        snap.forEach(docSnap => listaFornecedores.push(docSnap.data()));
+        listaFornecedores.sort((a, b) => Number(a.codigo) - Number(b.codigo));
+        renderizarTabela(listaFornecedores);
+      } catch (e) { console.error("Erro ao carregar fornecedores:", e); }
     }
 
     function renderizarTabela(dados) {
       const tbody = document.querySelector("#tabela-fornecedores tbody");
       tbody.innerHTML = "";
-
-      if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">Nenhum fornecedor cadastrado.</td></tr>';
-        return;
-      }
+      if (!dados.length) { tbody.innerHTML = '<tr><td colspan="6">Nenhum fornecedor cadastrado.</td></tr>'; return; }
 
       dados.forEach(forn => {
         const tr = document.createElement("tr");
-        const contato = forn.celular || forn.telefone || '';
         tr.innerHTML = `
           <td>${forn.codigo || ''}</td>
           <td>${forn.razaoSocial || ''}</td>
           <td>${forn.cnpjCpf || ''}</td>
           <td>${forn.situacao || ''}</td>
-          <td>${contato}</td>
-          <td>
-            <button type="button" class="btn-link" onclick="selecionarFornecedor('${forn.codigo}')">Selecionar</button>
-          </td>
+          <td>${forn.celular || forn.telefone || ''}</td>
+          <td><button type="button" class="btn-link" data-codigo="${forn.codigo}">Selecionar</button></td>
         `;
         tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll(".btn-link").forEach(btn => {
+        btn.addEventListener("click", function() { selecionarFornecedor(this.getAttribute("data-codigo")); });
       });
     }
 
@@ -567,27 +480,17 @@
     }
 
     function gerarProximoCodigoSequencial() {
-      if (listaFornecedores.length === 0) {
-        document.getElementById("codigo").value = 1;
-        return;
-      }
-      const codigosNumericos = listaFornecedores.map(f => Number(f.codigo)).filter(n => !isNaN(n));
-      const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-      document.getElementById("codigo").value = maiorCodigo + 1;
+      if (!listaFornecedores.length) { document.getElementById("codigo").value = 1; return; }
+      const nums = listaFornecedores.map(f => Number(f.codigo)).filter(n => !isNaN(n));
+      document.getElementById("codigo").value = (nums.length ? Math.max(...nums) : 0) + 1;
     }
 
     function filtrarFornecedores() {
-      const elBusca = document.getElementById("busca");
-      if (!elBusca) return;
-
-      const termo = elBusca.value.toLowerCase();
-      const filtrados = listaFornecedores.filter(f => 
+      const termo = document.getElementById("busca").value.toLowerCase();
+      renderizarTabela(listaFornecedores.filter(f => 
         String(f.codigo || '').toLowerCase().includes(termo) || 
-        String(f.razaoSocial || '').toLowerCase().includes(termo) ||
-        String(f.cnpjCpf || '').toLowerCase().includes(termo) ||
-        String(f.situacao || '').toLowerCase().includes(termo)
-      );
-      renderizarTabela(filtrados);
+        String(f.razaoSocial || '').toLowerCase().includes(termo)
+      ));
     }
 
     function limparTela() {
@@ -596,6 +499,6 @@
       document.querySelectorAll('.chk-situacao').forEach(chk => chk.checked = false);
       bloquearFormulario();
     }
-  </script>
+</script>
 </body>
 </html>

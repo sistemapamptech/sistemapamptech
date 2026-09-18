@@ -4,89 +4,117 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pamptech - Login</title>
-  <!-- Link para o arquivo CSS externo -->
   <link rel="stylesheet" href="login.css">
-  <!-- Fonte do Google (Poppins) para um visual moderno -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- Container principal que segura tudo -->
   <main class="login-container">
-    
-    <!-- O card de login central -->
     <div class="login-card">
       
       <!-- Cabeçalho do Card (Logo e Texto) -->
       <header class="card-header">
-        <!-- Espaço para o logo. Você pode usar uma imagem real ou texto como aqui -->
         <div class="logo">
-          <div class="logo-icon"></div> <!-- O ícone geométrico -->
+          <div class="logo-icon"></div>
           <div class="logo-text">
             <img src="img/pamptech-logo-bglight.png" style="width: 200px;">
           </div>
         </div>
-        <!-- Texto de boas-vindas -->
         <p class="welcome-text">Acesse sua conta e aproveite sua experiência!</p>
         <hr class="header-divider">
       </header>
       
       <!-- Formulário de Login -->
       <form id="form-login" class="login-form">
-        <!-- Campo de Usuário -->
         <div class="input-group">
           <input type="text" id="usuario" name="username" placeholder="Digite seu usuário" required>
         </div>
         
-        <!-- Campo de Senha -->
         <div class="input-group">
           <input type="password" id="senha" name="password" placeholder="Digite sua senha" required>
         </div>
         
-        <!-- Botão de Entrar -->
         <button type="submit" class="btn-login">Entrar</button>
       </form>
       
-      <!-- O efeito de gradiente azul desfocado (no canto inferior direito) -->
       <div class="gradient-blob"></div>
-      
     </div>
-    
   </main>
-  
-     <script>
-        const API_URL = "/.netlify/functions/sheets";
 
-        document.getElementById("form-login").addEventListener("submit", function (e) {
-            e.preventDefault();
-            
-            const payload = {
-                acao: "login",
-                dados: {
-                    usuario: document.getElementById("usuario").value.trim(),
-                    senha: document.getElementById("senha").value.trim()
-                }
-            };
+  <!-- Script do Firebase Firestore para Autenticação -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      getDocs, 
+      query, 
+      where 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === "sucesso") {
-                    // Armazena a sessão no navegador
-                    localStorage.setItem("usuarioLogado", JSON.stringify(res.usuario));
-                    window.location.href = "index.html";
-                } else {
-                    alert(res.message);
-                }
-            })
-            .catch(err => alert("Erro ao tentar realizar login."));
+    // Credenciais do seu Projeto no Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById("form-login").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      
+      const usuarioVal = document.getElementById("usuario").value.trim();
+      const senhaVal = document.getElementById("senha").value.trim();
+
+      try {
+        // Busca na coleção 'usuarios' do Firestore
+        const q = query(
+          collection(db, "usuarios"), 
+          where("usuario", "==", usuarioVal)
+        );
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          alert("Usuário ou senha incorretos.");
+          return;
+        }
+
+        let usuarioEncontrado = null;
+        querySnapshot.forEach((docSnap) => {
+          usuarioEncontrado = docSnap.data();
         });
-    </script>
- 
+
+        if (usuarioEncontrado.senha !== senhaVal) {
+          alert("Usuário ou senha incorretos.");
+          return;
+        }
+
+        if (usuarioEncontrado.status && usuarioEncontrado.status.toLowerCase() === "inativo") {
+          alert("Usuário inativo. Contate o administrador.");
+          return;
+        }
+
+        // Salva a sessão no navegador
+        localStorage.setItem("usuarioLogado", JSON.stringify({
+          nome: usuarioEncontrado.nome || usuarioEncontrado.usuario,
+          usuario: usuarioEncontrado.usuario
+        }));
+
+        window.location.href = "index.html";
+
+      } catch (err) {
+        console.error("Erro ao autenticar no Firestore:", err);
+        alert("Erro ao tentar realizar login.");
+      }
+    });
+  </script>
 
 </body>
 </html>

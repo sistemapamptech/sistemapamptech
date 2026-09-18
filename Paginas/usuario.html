@@ -164,293 +164,170 @@
 
   </main>
 
-<script>
-const API_URL = "/.netlify/functions/sheets";
-const ABA_NOME = "Usuarios";
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-let listaUsuarios = [];
-let modoAcao = "";
+    const firebaseConfig = {
+      apiKey: "AIzaSyC78Gjc24X90s20lQUVviCLsy5MQSzyiDk",
+      authDomain: "pamptech-sistema.firebaseapp.com",
+      projectId: "pamptech-sistema",
+      storageBucket: "pamptech-sistema.firebasestorage.app",
+      messagingSenderId: "950216971192",
+      appId: "1:950216971192:web:bfed0e70b64bc738b1354d",
+      measurementId: "G-EQDYPL7SB5"
+    };
 
-const camposForm = ["nome", "usuario", "senha", "status"];
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-document.addEventListener("DOMContentLoaded", function () {
-    const usuarioLogado = localStorage.getItem("usuarioLogado");
-    if (!usuarioLogado) {
-        window.location.href = "../login.html";
-        return;
-    }
+    let listaUsuarios = [];
+    let modoAcao = "";
 
-    const userObj = JSON.parse(usuarioLogado);
-    const elemNomeUsuario = document.getElementById("nome-usuario");
-    if (elemNomeUsuario) {
-        elemNomeUsuario.textContent = userObj.nome || "Usuário";
-    }
+    const camposForm = ["nome", "usuario", "senha", "email", "status"];
 
-    const btnLogout = document.getElementById("btn-logout");
-    if (btnLogout) {
-        btnLogout.addEventListener("click", function (e) {
-            e.preventDefault();
-            localStorage.removeItem("usuarioLogado");
-            window.location.href = "../login.html";
-        });
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+        const usuarioLogado = localStorage.getItem("usuarioLogado");
+        if (!usuarioLogado) { window.location.href = "../login.html"; return; }
 
-    bloquearFormulario();
-    carregarUsuarios();
+        const userObj = JSON.parse(usuarioLogado);
+        if (document.getElementById("nome-usuario")) document.getElementById("nome-usuario").textContent = userObj.nome;
 
-    document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
-    document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
-    document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
-    document.getElementById("btn-duplicar").addEventListener("click", duplicarUsuario);
-    document.getElementById("btn-deletar").addEventListener("click", deletarUsuario);
-
-    document.getElementById("busca").addEventListener("input", filtrarUsuarios);
-    document.getElementById("btn-buscar").addEventListener("click", filtrarUsuarios);
-});
-
-function obterNomeUsuarioAtivo() {
-    const usuarioLogado = localStorage.getItem("usuarioLogado");
-    if (usuarioLogado) {
-        try {
-            const userObj = JSON.parse(usuarioLogado);
-            return userObj.nome || "Usuário";
-        } catch (e) {
-            return "Usuário";
+        const btnLogout = document.getElementById("btn-logout");
+        if (btnLogout) {
+            btnLogout.addEventListener("click", function (e) {
+                e.preventDefault();
+                localStorage.removeItem("usuarioLogado");
+                window.location.href = "../login.html";
+            });
         }
-    }
-    return "Usuário";
-}
 
-function obterDataComUsuario() {
-    const hoje = new Date();
-    const dia = String(hoje.getDate()).padStart(2, '0');
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const ano = hoje.getFullYear();
-    const dataFormatada = `${dia}/${mes}/${ano}`;
-    const usuario = obterNomeUsuarioAtivo();
+        bloquearFormulario();
+        carregarUsuarios();
 
-    return `${dataFormatada} por ${usuario}`;
-}
-
-function bloquearFormulario() {
-    camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = true;
+        document.getElementById("btn-incluir").addEventListener("click", iniciarInclusao);
+        document.getElementById("btn-salvar").addEventListener("click", salvarOuAlterar);
+        document.getElementById("btn-editar").addEventListener("click", iniciarEdicao);
+        document.getElementById("btn-deletar").addEventListener("click", deletarUsuario);
+        document.getElementById("busca").addEventListener("input", filtrarUsuarios);
+        document.getElementById("btn-buscar").addEventListener("click", filtrarUsuarios);
     });
-    modoAcao = "";
-}
 
-function desbloquearFormulario() {
-    camposForm.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = false;
-    });
-    document.getElementById("nome").focus();
-}
-
-function iniciarInclusao() {
-    modoAcao = "incluir";
-    document.getElementById("form-usuario").reset();
-    desbloquearFormulario();
-
-    document.getElementById("dataCadastro").value = obterDataComUsuario();
-    document.getElementById("dataAlteracao").value = "";
-    gerarProximoCodigoSequencial();
-}
-
-function iniciarEdicao() {
-    const codigo = document.getElementById("codigo").value;
-    if (!codigo) {
-        alert("Selecione um usuário da lista para editar.");
-        return;
-    }
-    modoAcao = "editar";
-    desbloquearFormulario();
-    document.getElementById("dataAlteracao").value = obterDataComUsuario();
-}
-
-function duplicarUsuario() {
-    const codigoAtual = document.getElementById("codigo").value;
-    if (!codigoAtual) {
-        alert("Selecione um usuário da lista para duplicar.");
-        return;
+    function bloquearFormulario() {
+        camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+        modoAcao = "";
     }
 
-    modoAcao = "incluir";
-    desbloquearFormulario();
-
-    gerarProximoCodigoSequencial();
-    document.getElementById("usuario").value = "";
-    document.getElementById("dataCadastro").value = obterDataComUsuario();
-    document.getElementById("dataAlteracao").value = "";
-    document.getElementById("usuario").focus();
-}
-
-function salvarOuAlterar() {
-    if (!modoAcao) {
-        alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'.");
-        return;
+    function desbloquearFormulario() {
+        camposForm.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+        document.getElementById("nome").focus();
     }
 
-    const nome = document.getElementById("nome").value.trim();
-    const usuario = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
-    const status = document.getElementById("status").value;
-
-    if (!nome || !usuario || !senha || !status) {
-        alert("Por favor, preencha todos os campos obrigatórios.");
-        return;
+    function iniciarInclusao() {
+        modoAcao = "incluir";
+        const form = document.getElementById("form-usuario") || document.querySelector("form");
+        if (form) form.reset();
+        desbloquearFormulario();
     }
 
-    const payloadDados = {
-        codigo: document.getElementById("codigo").value,
-        nome: nome,
-        usuario: usuario,
-        senha: senha,
-        status: status,
-        dataCadastro: document.getElementById("dataCadastro").value,
-        dataAlteracao: document.getElementById("dataAlteracao").value
-    };
+    function iniciarEdicao() {
+        if (!document.getElementById("usuario").value) { alert("Selecione um usuário para editar."); return; }
+        modoAcao = "editar";
+        desbloquearFormulario();
+        document.getElementById("usuario").disabled = true; // Impede mudar a chave primária
+    }
 
-    const payload = {
-        aba: ABA_NOME,
-        acao: "salvar",
-        dados: payloadDados
-    };
+    async function salvarOuAlterar() {
+        if (!modoAcao) { alert("Clique em 'Incluir' para cadastrar ou selecione um registro e clique em 'Editar'."); return; }
+        
+        const userVal = document.getElementById("usuario").value.trim();
+        const nomeVal = document.getElementById("nome").value.trim();
+        const senhaVal = document.getElementById("senha").value.trim();
 
-    fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.status === "sucesso") {
+        if (!userVal || !nomeVal || !senhaVal) { alert("Preencha Nome, Usuário e Senha."); return; }
+
+        const dadosPayload = {};
+        camposForm.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) dadosPayload[id] = el.value.trim();
+        });
+
+        try {
+            await setDoc(doc(db, "usuarios", userVal), dadosPayload);
             alert(modoAcao === "incluir" ? "Usuário cadastrado com sucesso!" : "Usuário alterado com sucesso!");
             limparTela();
             carregarUsuarios();
-        } else {
-            alert("Erro: " + res.message);
-        }
-    })
-    .catch(error => {
-        console.error("Erro ao salvar usuário:", error);
-        alert("Erro ao processar a solicitação.");
-    });
-}
-
-function deletarUsuario() {
-    const codigo = document.getElementById("codigo").value;
-    if (!codigo) {
-        alert("Selecione um usuário da lista para deletar.");
-        return;
+        } catch (e) { console.error("Erro ao salvar usuário:", e); }
     }
 
-    if (!confirm(`Deseja realmente excluir o usuário código ${codigo}?`)) {
-        return;
-    }
+    async function deletarUsuario() {
+        const userVal = document.getElementById("usuario").value.trim();
+        if (!userVal) { alert("Selecione um usuário para deletar."); return; }
+        if (!confirm(`Deseja realmente excluir o usuário '${userVal}'?`)) return;
 
-    const payload = {
-        aba: ABA_NOME,
-        acao: "deletar",
-        dados: { codigo: codigo }
-    };
-
-    fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.status === "sucesso") {
+        try {
+            await deleteDoc(doc(db, "usuarios", userVal));
             alert("Usuário deletado com sucesso!");
             limparTela();
             carregarUsuarios();
-        } else {
-            alert("Erro ao deletar: " + (res.mensagem || res.message));
-        }
-    })
-    .catch(error => {
-        console.error("Erro ao deletar usuário:", error);
-        alert("Erro ao excluir o usuário.");
-    });
-}
-
-function carregarUsuarios() {
-    fetch(`${API_URL}?aba=${ABA_NOME}`)
-        .then(r => r.json())
-        .then(dados => {
-            listaUsuarios = dados;
-            renderizarTabelaUsuarios(listaUsuarios);
-        })
-        .catch(err => console.error("Erro ao carregar usuários:", err));
-}
-
-function renderizarTabelaUsuarios(dados) {
-    const tbody = document.querySelector("#tabela-usuarios tbody");
-    tbody.innerHTML = "";
-
-    if (!dados || dados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário cadastrado.</td></tr>';
-        return;
+        } catch (e) { console.error("Erro ao deletar usuário:", e); }
     }
 
-    dados.forEach(user => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${user.codigo || ''}</td>
-            <td>${user.nome || ''}</td>
-            <td>${user.usuario || ''}</td>
-            <td>${user.status || ''}</td>
-            <td>
-                <button type="button" class="btn-link" onclick="selecionarUsuario('${user.codigo}')">Selecionar</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function selecionarUsuario(codigo) {
-    const user = listaUsuarios.find(u => String(u.codigo) === String(codigo));
-    if (!user) return;
-
-    document.getElementById("codigo").value = user.codigo || '';
-    document.getElementById("nome").value = user.nome || '';
-    document.getElementById("usuario").value = user.usuario || '';
-    document.getElementById("senha").value = user.senha || '';
-    document.getElementById("status").value = user.status || '';
-    document.getElementById("dataCadastro").value = user.dataCadastro || '';
-    document.getElementById("dataAlteracao").value = user.dataAlteracao || '';
-
-    bloquearFormulario();
-}
-
-function gerarProximoCodigoSequencial() {
-    if (!listaUsuarios || listaUsuarios.length === 0) {
-        document.getElementById("codigo").value = 1;
-        return;
+    async function carregarUsuarios() {
+        try {
+            const snap = await getDocs(collection(db, "usuarios"));
+            listaUsuarios = [];
+            snap.forEach(docSnap => listaUsuarios.push(docSnap.data()));
+            renderizarTabela(listaUsuarios);
+        } catch (e) { console.error("Erro ao carregar usuários:", e); }
     }
-    const codigosNumericos = listaUsuarios.map(u => Number(u.codigo)).filter(n => !isNaN(n));
-    const maiorCodigo = codigosNumericos.length > 0 ? Math.max(...codigosNumericos) : 0;
-    document.getElementById("codigo").value = maiorCodigo + 1;
-}
 
-function filtrarUsuarios() {
-    const termo = document.getElementById("busca").value.toLowerCase();
-    const filtrados = listaUsuarios.filter(u => 
-        String(u.codigo || '').toLowerCase().includes(termo) || 
-        String(u.nome || '').toLowerCase().includes(termo) ||
-        String(u.usuario || '').toLowerCase().includes(termo)
-    );
-    renderizarTabelaUsuarios(filtrados);
-}
+    function renderizarTabela(dados) {
+        const tbody = document.querySelector("#tabela-usuarios tbody") || document.querySelector("table tbody");
+        tbody.innerHTML = "";
+        if (!dados.length) { tbody.innerHTML = '<tr><td colspan="5">Nenhum usuário cadastrado.</td></tr>'; return; }
 
-function limparTela() {
-    document.getElementById("form-usuario").reset();
-    document.getElementById("codigo").value = "";
-    bloquearFormulario();
-}
+        dados.forEach(u => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${u.nome || ''}</td>
+                <td>${u.usuario || ''}</td>
+                <td>${u.email || ''}</td>
+                <td>${u.status || 'Ativo'}</td>
+                <td><button type="button" class="btn-link" data-usuario="${u.usuario}">Selecionar</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll(".btn-link").forEach(btn => {
+            btn.addEventListener("click", function() { selecionarUsuario(this.getAttribute("data-usuario")); });
+        });
+    }
+
+    function selecionarUsuario(usrKey) {
+        const u = listaUsuarios.find(item => String(item.usuario) === String(usrKey));
+        if (!u) return;
+
+        camposForm.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = u[id] || '';
+        });
+        bloquearFormulario();
+    }
+
+    function filtrarUsuarios() {
+        const termo = document.getElementById("busca").value.toLowerCase();
+        renderizarTabela(listaUsuarios.filter(u => 
+            String(u.nome || '').toLowerCase().includes(termo) || 
+            String(u.usuario || '').toLowerCase().includes(termo)
+        ));
+    }
+
+    function limparTela() {
+        const form = document.getElementById("form-usuario") || document.querySelector("form");
+        if (form) form.reset();
+        bloquearFormulario();
+    }
 </script>
 
 </body>
